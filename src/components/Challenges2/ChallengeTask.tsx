@@ -1,7 +1,7 @@
 import React from "react";
 import { Task as TaskType } from "@/types/challangeTypes";
-import Subtask from "./Subtask";
 import { Input } from "@/components/ui/input";
+import ChallengeSubtask from "./ChallengeSubtask";
 
 interface TaskProps {
   challengeId: string | undefined;
@@ -10,7 +10,8 @@ interface TaskProps {
   taskIndex: number;
 }
 
-const Task: React.FC<TaskProps> = ({ challengeId, sectionIndex, task, taskIndex }) => {
+
+const ChallangeTask: React.FC<TaskProps> = ({ challengeId, sectionIndex, task, taskIndex }) =>{
   return (
     <div className="space-y-2">
       <div className="flex items-center space-x-2">
@@ -30,7 +31,7 @@ const Task: React.FC<TaskProps> = ({ challengeId, sectionIndex, task, taskIndex 
 
         {/* Subtasks */}
         {task.subchallenges.map((sub, subIndex) => (
-          <Subtask
+          <ChallengeSubtask
             key={subIndex}
             challengeId={challengeId}
             sectionIndex={sectionIndex}
@@ -45,7 +46,7 @@ const Task: React.FC<TaskProps> = ({ challengeId, sectionIndex, task, taskIndex 
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Task;
+export default ChallangeTask

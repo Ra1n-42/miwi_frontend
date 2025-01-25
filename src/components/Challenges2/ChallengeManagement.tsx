@@ -2,8 +2,9 @@ import { useChallengeStore } from "@/store/useChallengeStore";
 import ChallengeCard from "./ChallengeCard";
 import { useEffect } from "react";
 
+
 const ChallengeManagement = () => {
-  const { challenges, fetchChallenges } = useChallengeStore();
+  const { challenges, fetchChallenges, addChallenge } = useChallengeStore();
 
   useEffect(() => {
     fetchChallenges();
@@ -12,7 +13,7 @@ const ChallengeManagement = () => {
   return (
     <div>
       <button
-        // onClick={addChallenge} (kann später hinzugefügt werden)
+        onClick={addChallenge} //(kann später hinzugefügt werden)
         className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mb-5"
       >
         Neue Challenge hinzufügen

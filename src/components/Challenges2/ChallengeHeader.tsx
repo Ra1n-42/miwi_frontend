@@ -4,17 +4,22 @@ import { Input } from "@/components/ui/input";
 import { formatDate2 } from "@/utils/dateUtils";
 import { Challenge } from "@/types/challangeTypes";
 
+import { useChallengeStore } from "@/store/useChallengeStore";
+
 interface ChallengeHeaderProps {
   challenge: Challenge;
 }
 
-function ChallangeHeader({ challenge }: ChallengeHeaderProps) {
+function ChallengeHeader({ challenge }: ChallengeHeaderProps) {
+  const { deleteChallenge } = useChallengeStore();
+
   return (
     <div>
       {`Callange ID: ${challenge.id}`}
       <div className="border-b pb-4 mb-4">
         <div className="flex justify-end">
-          <button className="text-red-500 hover:text-red-700 mt-2">
+          <button className="text-white hover:bg-red-500 mt-2 bg-red-700 p-1 rounded-sm"
+            onClick={() => challenge.id && deleteChallenge(challenge.id)}>
             Challenge löschen
           </button>
         </div>
@@ -64,4 +69,4 @@ function ChallangeHeader({ challenge }: ChallengeHeaderProps) {
   );
 }
 
-export default ChallangeHeader;
+export default ChallengeHeader;

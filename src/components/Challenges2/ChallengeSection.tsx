@@ -1,7 +1,7 @@
 import React from "react";
 import { Section as SectionType } from "@/types/challangeTypes";
-import Task from "./Task";
 import { Input } from "@/components/ui/input";
+import ChallangeTask from "./ChallengeTask";
 
 interface SectionProps {
   challengeId: string | undefined;
@@ -9,13 +9,13 @@ interface SectionProps {
   sectionIndex: number;
 }
 
-const Section: React.FC<SectionProps> = ({
+const ChallengeSection: React.FC<SectionProps> = ({
   challengeId,
   section,
   sectionIndex,
 }) => {
   return (
-    <div className="mb-6 p-3 border rounded">
+    <div className="mb-6 p-3 border rounded bg-neutral-700">
       <div className="flex justify-between items-center mb-3">
 
         <Input
@@ -28,7 +28,7 @@ const Section: React.FC<SectionProps> = ({
 
       {/* Aufgaben */}
       {section.items.map((item, itemIndex) => (
-        <Task
+        <ChallangeTask
           key={itemIndex}
           challengeId={challengeId}
           sectionIndex={sectionIndex}
@@ -44,4 +44,4 @@ const Section: React.FC<SectionProps> = ({
   );
 };
 
-export default Section;
+export default ChallengeSection;

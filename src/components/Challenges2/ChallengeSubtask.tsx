@@ -11,7 +11,7 @@ interface SubtaskProps {
   subtaskIndex: number;
 }
 
-const Subtask: React.FC<SubtaskProps> = ({ subtask }) => {
+const ChallengeSubtask: React.FC<SubtaskProps> = ({ subtask }) => {
   return (
     <div className="ml-8 flex items-center space-x-2">
       <Input
@@ -27,4 +27,4 @@ const Subtask: React.FC<SubtaskProps> = ({ subtask }) => {
   );
 };
 
-export default Subtask;
+export default ChallengeSubtask;
