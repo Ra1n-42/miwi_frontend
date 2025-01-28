@@ -1,16 +1,18 @@
 export interface Subtask {
-  id?: string;
+  id: string;
   text: string;
+  completed: boolean;
 }
 
 export interface Task {
-  id?: string;
+  id: string;
   text: string;
   completed: boolean;
   subchallenges: Subtask[];
 }
 
 export interface Section {
+  id: string;
   title: string;
   items: Task[];
 }

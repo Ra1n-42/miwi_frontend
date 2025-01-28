@@ -11,7 +11,7 @@ interface ChallengeHeaderProps {
 }
 
 function ChallengeHeader({ challenge }: ChallengeHeaderProps) {
-  const { deleteChallenge } = useChallengeStore();
+  const { updateChallenge, deleteChallenge } = useChallengeStore();
 
   return (
     <div>
@@ -28,7 +28,7 @@ function ChallengeHeader({ challenge }: ChallengeHeaderProps) {
           <Input
             type="text"
             id="titel"
-            onChange={() => console.log("first")}
+            onChange={(e) => challenge.id && updateChallenge(challenge.id, "title", e.target.value)}
             value={challenge.header.title}
             placeholder="Titel"
           />
@@ -37,7 +37,7 @@ function ChallengeHeader({ challenge }: ChallengeHeaderProps) {
           <Label htmlFor="message">Challange Beschreibung</Label>
           <Textarea
             placeholder="Hier kommt die Beschreibung."
-            onChange={() => console.log("second")}
+            onChange={(e) => challenge.id && updateChallenge(challenge.id, "description", e.target.value)}
             value={challenge.header.description}
             id="message"
           />
@@ -47,7 +47,7 @@ function ChallengeHeader({ challenge }: ChallengeHeaderProps) {
             <Label htmlFor="start_time">Die Startzeit</Label>
             <input
               type="date"
-              onChange={() => console.log("lol")}
+              onChange={(e) => challenge.id && updateChallenge(challenge.id, "created_at", e.target.value.replace(/-/g,"."))}
               defaultValue={formatDate2(challenge.header.created_at)}
               id="start_time"
               className="text-gray-500 bg-transparent bg-violet-50 w-full"
@@ -57,7 +57,7 @@ function ChallengeHeader({ challenge }: ChallengeHeaderProps) {
             <Label htmlFor="end_time">Die Endzeit</Label>
             <input
               type="date"
-              onChange={() => console.log("lol2")}
+              onChange={(e) => challenge.id && updateChallenge(challenge.id, "challange_end", e.target.value.replace(/-/g,"."))}
               defaultValue={formatDate2(challenge.header.challange_end)}
               id="end_time"
               className="text-gray-500 bg-transparent bg-violet-50 w-full"
