@@ -16,18 +16,18 @@ const ChallengeSubtask: React.FC<SubtaskProps> = ({ subtask, challengeId, sectio
   return (
     <div className="ml-8 flex items-center space-x-2">
       <Input
-          type="text"
-          onChange={(e) => challengeId && updateSubchallengeText(
-            challengeId,
-            sectionIndex,
-            taskIndex,
-            subtaskIndex,
-            e.target.value)}
-          value={subtask.text}
-          placeholder=""
-        />
+        type="text"
+        onChange={(e) => challengeId && updateSubchallengeText(
+          challengeId,
+          sectionIndex,
+          taskIndex,
+          subtaskIndex,
+          e.target.value)}
+        value={subtask.text}
+        placeholder=""
+      />
       <button className="w-3.5 h-3.5 bg-red-500 hover:bg-red-400 rounded-sm flex justify-center items-center pb-1"
-      onClick={() => challengeId && deleteSubchallenge(challengeId, sectionIndex, taskIndex, subtaskIndex)}
+        onClick={() => challengeId && deleteSubchallenge(challengeId, sectionIndex, taskIndex, subtaskIndex)}
       >
         x
       </button>

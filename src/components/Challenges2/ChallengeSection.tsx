@@ -25,21 +25,21 @@ const ChallengeSection: React.FC<SectionProps> = ({
         <button
           className="deletesektion p-1 bg-red-500 hover:bg-red-400 rounded-sm flex justify-center items-center"
           onClick={() => challengeId && deleteSection(challengeId, sectionIndex)}
-          >
+        >
           Section löschen
         </button>
       </div>
       <div className="flex justify-between items-center mb-3 flex-col">
         {"ID: " + section.id}
-        <div className="flex items-center space-x-2 w-full"> 
-        <label htmlFor="titel">Titel</label>
-        <Input
-          type="text"
-          id="titel"
-          className="Sectiontitle"
-          onChange={(e) => challengeId && updateSectionTitle(challengeId, sectionIndex, e.target.value)}
-          value={section.title}
-          placeholder=""
+        <div className="flex items-center space-x-2 w-full">
+          <label htmlFor="titel">Titel</label>
+          <Input
+            type="text"
+            id="titel"
+            className="Sectiontitle"
+            onChange={(e) => challengeId && updateSectionTitle(challengeId, sectionIndex, e.target.value)}
+            value={section.title}
+            placeholder=""
           />
         </div>
       </div>
@@ -47,14 +47,14 @@ const ChallengeSection: React.FC<SectionProps> = ({
       {section.items.map((item, itemIndex) => (
         <div>
 
-          {"ID: "+ item.id}
+          {"ID: " + item.id}
           <ChallangeTask
             key={itemIndex}
             challengeId={challengeId}
             sectionIndex={sectionIndex}
             task={item}
             taskIndex={itemIndex}
-            />
+          />
         </div>
       ))}
 

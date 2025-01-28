@@ -154,9 +154,8 @@ const ChallengesManagement: React.FC = () => {
                           />
 
                           <input
-                            className={`bg-transparent ${
-                              item.completed ? "line-through text-gray-400" : ""
-                            }`}
+                            className={`bg-transparent ${item.completed ? "line-through text-gray-400" : ""
+                              }`}
                             value={item.text}
                             onChange={(e) =>
                               updateItemText(

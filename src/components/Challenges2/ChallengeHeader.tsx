@@ -47,7 +47,7 @@ function ChallengeHeader({ challenge }: ChallengeHeaderProps) {
             <Label htmlFor="start_time">Die Startzeit</Label>
             <input
               type="date"
-              onChange={(e) => challenge.id && updateChallenge(challenge.id, "created_at", e.target.value.replace(/-/g,"."))}
+              onChange={(e) => challenge.id && updateChallenge(challenge.id, "created_at", e.target.value.replace(/-/g, "."))}
               defaultValue={formatDate2(challenge.header.created_at)}
               id="start_time"
               className="text-gray-500 bg-transparent bg-violet-50 w-full"
@@ -57,7 +57,7 @@ function ChallengeHeader({ challenge }: ChallengeHeaderProps) {
             <Label htmlFor="end_time">Die Endzeit</Label>
             <input
               type="date"
-              onChange={(e) => challenge.id && updateChallenge(challenge.id, "challange_end", e.target.value.replace(/-/g,"."))}
+              onChange={(e) => challenge.id && updateChallenge(challenge.id, "challange_end", e.target.value.replace(/-/g, "."))}
               defaultValue={formatDate2(challenge.header.challange_end)}
               id="end_time"
               className="text-gray-500 bg-transparent bg-violet-50 w-full"

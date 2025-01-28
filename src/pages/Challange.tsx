@@ -7,7 +7,10 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion"
 
-export function AccordionDemo({
+import { Challenge as ChallengeData, Subtask } from "@/types/challangeTypes";
+
+
+function AccordionDemo({
   challenges,
   onSelectChallenge,
 }: {
@@ -45,45 +48,16 @@ export function AccordionDemo({
   );
 }
 
-
-interface ChallengeData {
-  id: string;
-  header: {
-    title: string;
-    description: string;
-    created_at: string;
-    challange_end: string;
-    timeframe: string;
-  };
-  sections: Section[];
-  archived: boolean;
-}
-
-interface Section {
-  title: string;
-  items: Item[];
-}
-
-interface Item {
-  text: string;
-  completed: boolean;
-  subchallenges: SubItem[];
-}
-interface SubItem {
-  text: string;
-  completed: boolean;
-}
-
 function Challenge() {
   const [challenges, setChallenges] = useState<ChallengeData[]>([]);
   const [selectedChallenge, setSelectedChallenge] = useState<ChallengeData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  
+
   useEffect(() => {
     const fetchChallengeData = async () => {
       try {
-        const response = await fetch("https://dev.miwi.tv/api/challange/all"); 
+        const response = await fetch("https://dev.miwi.tv/api/challange/all");
         // const response = await fetch("/challanges.json"); // Mockup
         if (response.ok) {
           const data: ChallengeData[] = await response.json();
@@ -105,10 +79,10 @@ function Challenge() {
         setIsLoading(false);
       }
     };
-  
+
     fetchChallengeData();
   }, []);
-  
+
 
   if (isLoading) {
     return (
@@ -125,15 +99,14 @@ function Challenge() {
       </div>
     );
   }
-  const renderSubchallenges = (subchallenges:SubItem[]) => (
+  const renderSubchallenges = (subchallenges: Subtask[]) => (
     <ul className="list-disc space-y-2">
       {subchallenges.map((sub, idx) => (
         <li
           key={idx}
-          className={`flex items-start ${
-            sub.completed ? "text-green-400" : "text-gray-300"
-          }`}
-          >
+          className={`flex items-start ${sub.completed ? "text-green-400" : "text-gray-300"
+            }`}
+        >
           {sub.completed ? <span className="mr-2">&#10003;</span> : <span className="mr-2">&#9679;</span>}
           {sub.text}
         </li>
@@ -176,9 +149,8 @@ function Challenge() {
                     {section.items.map((item, idx) => (
                       <li
                         key={idx}
-                        className={`flex items-start ${
-                          item.completed ? "text-green-500" : "text-white"
-                        }`}
+                        className={`flex items-start ${item.completed ? "text-green-500" : "text-white"
+                          }`}
                       >
                         <div>
                           {item.completed ? (<span className="mr-2">&#10003;</span>) : (<span className="mr-2">&#9679;</span>)}

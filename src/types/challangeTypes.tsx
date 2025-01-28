@@ -25,7 +25,7 @@ export interface ChallengeHeader {
 }
 
 export interface Challenge {
-  id?: string;
+  id: string;
   header: ChallengeHeader;
   sections: Section[];
 }
