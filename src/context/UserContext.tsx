@@ -25,10 +25,10 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        // const response = await fetch("https://dev.miwi.tv/api/user/me", {
-        //   credentials: "include", // jwt auth
-        // });
-        const response = await fetch("/mockUserData.json"); // mockup
+        const response = await fetch("https://dev.miwi.tv/api/user/me", {
+          credentials: "include", // jwt auth
+        });
+        // const response = await fetch("/mockUserData.json"); // mockup
         if (response.ok) {
           const userData: User = await response.json();
           setUser(userData);
