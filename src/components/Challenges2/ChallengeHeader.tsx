@@ -1,7 +1,7 @@
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { toBackendDateFormat, toInputDateFormat } from "@/utils/dateUtils";
+// import { toBackendDateFormat, toInputDateFormat } from "@/utils/dateUtils";
 import { Challenge } from "@/types/challangeTypes";
 
 import { useChallengeStore } from "@/store/useChallengeStore";
@@ -14,6 +14,55 @@ interface ChallengeHeaderProps {
 function ChallengeHeader({ challenge }: ChallengeHeaderProps) {
   const { updateChallenge, deleteChallenge } = useChallengeStore();
   const { toast } = useToast();
+
+
+
+  // Hilfsfunktion zur sicheren Datumkonvertierung
+  const formatDateForInput = (dateString: string) => {
+    try {
+      if (!dateString) return "";
+
+      // Check if date is already in yyyy-MM-dd format
+      if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        return dateString;
+      }
+
+      // Split DD-MM-YYYY format
+      const [day, month, year] = dateString.split("-").map(part => part.trim());
+
+      if (!day || !month || !year) {
+        console.error("Ungültiges Datumsformat:", dateString);
+        return "";
+      }
+
+      // Ensure padding
+      const paddedDay = day.padStart(2, "0");
+      const paddedMonth = month.padStart(2, "0");
+
+      // Return in YYYY-MM-DD format
+      return `${year}-${paddedMonth}-${paddedDay}`;
+    } catch (error) {
+      console.error("Fehler bei der Datumsformatierung:", error);
+      return "";
+    }
+  };
+
+  // Diese Hilfsfunktion bleibt unverändert
+  const handleDateChange = (key: "created_at" | "challange_end", value: string) => {
+    if (!challenge.id) return;
+
+    try {
+      const [year, month, day] = value.split("-");
+      const backendFormat = `${day}-${month}-${year}`;
+      updateChallenge(challenge.id, key, backendFormat);
+    } catch (error) {
+      console.error("Fehler bei der Datumverarbeitung:", error);
+      toast({
+        variant: "destructive",
+        description: "Ungültiges Datumsformat"
+      });
+    }
+  };
 
   return (
     <div>
@@ -58,15 +107,8 @@ function ChallengeHeader({ challenge }: ChallengeHeaderProps) {
 
             <input
               type="date"
-              onChange={(e) =>
-                challenge.id &&
-                updateChallenge(
-                  challenge.id,
-                  "created_at",
-                  toBackendDateFormat(e.target.value) // Konvertiert ins Backend-Format
-                )
-              }
-              value={toInputDateFormat(challenge.header.created_at)} // Konvertiert ins Input-Format
+              onChange={(e) => handleDateChange("created_at", e.target.value)}
+              value={formatDateForInput(challenge.header.created_at)}
               id="start_time"
               className="text-gray-500 bg-transparent bg-violet-50 w-full"
             />
@@ -75,15 +117,8 @@ function ChallengeHeader({ challenge }: ChallengeHeaderProps) {
             <Label htmlFor="end_time">Die Endzeit</Label>
             <input
               type="date"
-              onChange={(e) =>
-                challenge.id &&
-                updateChallenge(
-                  challenge.id,
-                  "challange_end",
-                  toBackendDateFormat(e.target.value) // Konvertiert ins Backend-Format
-                )
-              }
-              value={toInputDateFormat(challenge.header.challange_end)} // Konvertiert ins Input-Format
+              onChange={(e) => handleDateChange("challange_end", e.target.value)}
+              value={formatDateForInput(challenge.header.challange_end)}
               id="end_time"
               className="text-gray-500 bg-transparent bg-violet-50 w-full"
             />
