@@ -5,12 +5,14 @@ import { immer } from "zustand/middleware/immer";
 import { useToast } from "@/hooks/use-toast"
 import { ToastAction } from "@/components/ui/toast"
 import { formatDate } from "@/utils/dateUtils";
+import { challengeService } from "@/api/challengeService";
+import { data } from "react-router-dom";
 
 interface ChallengeStore {
   challenges: Challenge[]; // die interface von Challange
   fetchChallenges: () => Promise<void>; // Wird automatisch aufgerufen
   addChallenge: () => void;
-  deleteChallenge: (id: string) => void;
+  deleteChallenge: (id: string, toast: any) => void;
   updateChallenge: (challengeId: string, key: keyof Challenge["header"], value: string) => void;
   addSection: (challengeId: string) => void;
   addTask: (challengeId: string, sectionId: number) => void;
@@ -28,18 +30,15 @@ interface ChallengeStore {
     newText: string
   ) => void;
   deleteSubchallenge: (challengeId: string, sectionIndex: number, taskIndex: number, subtaskIndex: number) => void;
-  saveChallenge: (challenge: Challenge) => void;
+  saveChallenge: (challenge: Challenge, toast: any) => void;
 }
 
 export const useChallengeStore = create<ChallengeStore>()(
   immer<ChallengeStore>((set) => ({
     challenges: [],
     fetchChallenges: async () => {
-      const response = await fetch("/challanges.json");
-      const data = await response.json();
-      set((state) => {
-        state.challenges = data;
-      });
+      const data = await challengeService.fetchChallenges();
+      set(state => { state.challenges = data; });
     },
     addChallenge: () => {
       const newChallenge: Challenge = {
@@ -57,7 +56,7 @@ export const useChallengeStore = create<ChallengeStore>()(
       });
     },
 
-    deleteChallenge: async (id: string) => {
+    deleteChallenge: async (id: string, toast: any) => {
       if (id.startsWith("NEW-")) {
         // Lokale Challenge löschen (nicht in der Datenbank)
         set((state) => {
@@ -71,33 +70,21 @@ export const useChallengeStore = create<ChallengeStore>()(
       if (!confirmDelete) return;
 
       try {
-        // const response = await fetch(`https://dev.miwi.tv/api/challange/delete/${id}`, {
-        //   method: "DELETE",
-        //   credentials: "include", // JWT Auth
-        // });
-        // Mock response für Testzwecke
-        const response = {
-          ok: true, // API-Antwort simulieren
-          status: 200,
-          statusText: "OK",
-          json: async () => ({ detail: "lol" }), // Dummy JSON-Antwort
-        };
-        if (response.ok) {
-          console.log(`Challenge mit ID ${id} erfolgreich gelöscht.`);
-          set((state) => {
-            state.challenges = state.challenges.filter((challenge) => challenge.id !== id);
-          });
-        } else {
-          const errorData = await response.json().catch(() => null);
-          console.error("Fehler beim Löschen der Challenge");
-          if (errorData && errorData.detail) {
-            console.error("Fehlerdetail:", errorData.detail);
-          } else {
-            console.error("Status:", response.status, response.statusText);
-          }
-        }
+
+        await challengeService.deleteChallenge(id);
+        set(state => {
+          state.challenges = state.challenges.filter((challenge) => challenge.id !== id);
+        });
+        toast({
+          description: "Challenge erfolgreich gelöscht!",
+        });
       } catch (error) {
-        console.error("Fehler beim Löschen der Challenge:", error);
+        toast({
+          variant: "destructive",
+          description: "Fehler beim Löschen der Challenge.",
+          action: <ToastAction altText="Ok">Ok</ToastAction>,
+        });
+        console.error("Error deleting challenge:", error);
       }
     },
 
@@ -294,13 +281,10 @@ export const useChallengeStore = create<ChallengeStore>()(
         }
       }),
 
-    saveChallenge: async (challenge: Challenge) => {
-      const { toast } = useToast();
+    saveChallenge: async (challenge: Challenge, toast: any) => {
       const isEditMode = challenge.id ? !challenge.id.startsWith("NEW-") : false;
-
-      const url = isEditMode
-        ? `https://dev.miwi.tv/api/challange/update/${challenge.id}` // Bearbeiten
-        : "https://dev.miwi.tv/api/challange/create";
+      const baseUrl = window.location.hostname === "localhost" ? "http://localhost:5173" : "https://dev.miwi.tv";
+      const url = `${baseUrl}/api/challange/${isEditMode ? `update/${challenge.id}` : "create"}`; // Kurzschreibweise
 
       const method = isEditMode ? "PUT" : "POST";
 
@@ -328,11 +312,15 @@ export const useChallengeStore = create<ChallengeStore>()(
       console.log("Request Body:", JSON.stringify(requestBody, null, 2)); // Schön formatiertes Logging
 
       try {
+
+        if (window.location.hostname === "localhost") {
+          await new Promise((resolve) => setTimeout(resolve, 1000)); // Simuliere eine Verzögerung von 1 Sekunde
+          toast({ description: "Mock: Challenge erfolgreich gespeichert!" });
+          return { success: true, data: requestBody };
+        }
         const response = await fetch(url, {
           method,
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(requestBody),
           credentials: "include", // JWT Auth
         });

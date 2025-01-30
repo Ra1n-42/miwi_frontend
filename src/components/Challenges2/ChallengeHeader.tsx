@@ -5,6 +5,7 @@ import { formatDate2 } from "@/utils/dateUtils";
 import { Challenge } from "@/types/challangeTypes";
 
 import { useChallengeStore } from "@/store/useChallengeStore";
+import { useToast } from "@/hooks/use-toast";
 
 interface ChallengeHeaderProps {
   challenge: Challenge;
@@ -12,6 +13,7 @@ interface ChallengeHeaderProps {
 
 function ChallengeHeader({ challenge }: ChallengeHeaderProps) {
   const { updateChallenge, deleteChallenge } = useChallengeStore();
+  const { toast } = useToast();
 
   return (
     <div>
@@ -19,7 +21,7 @@ function ChallengeHeader({ challenge }: ChallengeHeaderProps) {
       <div className="border-b pb-4 mb-4">
         <div className="flex justify-end">
           <button className="text-white hover:bg-red-500 mt-2 bg-red-700 p-1 rounded-sm"
-            onClick={() => challenge.id && deleteChallenge(challenge.id)}>
+            onClick={() => challenge.id && deleteChallenge(challenge.id, toast)}>
             Challenge löschen
           </button>
         </div>
