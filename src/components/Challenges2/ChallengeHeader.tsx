@@ -1,7 +1,7 @@
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { formatDate2 } from "@/utils/dateUtils";
+import { toBackendDateFormat, toInputDateFormat } from "@/utils/dateUtils";
 import { Challenge } from "@/types/challangeTypes";
 
 import { useChallengeStore } from "@/store/useChallengeStore";
@@ -20,8 +20,10 @@ function ChallengeHeader({ challenge }: ChallengeHeaderProps) {
       {`Callange ID: ${challenge.id}`}
       <div className="border-b pb-4 mb-4">
         <div className="flex justify-end">
-          <button className="text-white hover:bg-red-500 mt-2 bg-red-700 p-1 rounded-sm"
-            onClick={() => challenge.id && deleteChallenge(challenge.id, toast)}>
+          <button
+            className="text-white hover:bg-red-500 mt-2 bg-red-700 p-1 rounded-sm"
+            onClick={() => challenge.id && deleteChallenge(challenge.id, toast)}
+          >
             Challenge löschen
           </button>
         </div>
@@ -30,7 +32,10 @@ function ChallengeHeader({ challenge }: ChallengeHeaderProps) {
           <Input
             type="text"
             id="titel"
-            onChange={(e) => challenge.id && updateChallenge(challenge.id, "title", e.target.value)}
+            onChange={(e) =>
+              challenge.id &&
+              updateChallenge(challenge.id, "title", e.target.value)
+            }
             value={challenge.header.title}
             placeholder="Titel"
           />
@@ -39,7 +44,10 @@ function ChallengeHeader({ challenge }: ChallengeHeaderProps) {
           <Label htmlFor="message">Challange Beschreibung</Label>
           <Textarea
             placeholder="Hier kommt die Beschreibung."
-            onChange={(e) => challenge.id && updateChallenge(challenge.id, "description", e.target.value)}
+            onChange={(e) =>
+              challenge.id &&
+              updateChallenge(challenge.id, "description", e.target.value)
+            }
             value={challenge.header.description}
             id="message"
           />
@@ -47,10 +55,18 @@ function ChallengeHeader({ challenge }: ChallengeHeaderProps) {
         <div className="flex space-x-4">
           <div>
             <Label htmlFor="start_time">Die Startzeit</Label>
+
             <input
               type="date"
-              onChange={(e) => challenge.id && updateChallenge(challenge.id, "created_at", e.target.value.replace(/-/g, "."))}
-              defaultValue={formatDate2(challenge.header.created_at)}
+              onChange={(e) =>
+                challenge.id &&
+                updateChallenge(
+                  challenge.id,
+                  "created_at",
+                  toBackendDateFormat(e.target.value) // Konvertiert ins Backend-Format
+                )
+              }
+              value={toInputDateFormat(challenge.header.created_at)} // Konvertiert ins Input-Format
               id="start_time"
               className="text-gray-500 bg-transparent bg-violet-50 w-full"
             />
@@ -59,8 +75,15 @@ function ChallengeHeader({ challenge }: ChallengeHeaderProps) {
             <Label htmlFor="end_time">Die Endzeit</Label>
             <input
               type="date"
-              onChange={(e) => challenge.id && updateChallenge(challenge.id, "challange_end", e.target.value.replace(/-/g, "."))}
-              defaultValue={formatDate2(challenge.header.challange_end)}
+              onChange={(e) =>
+                challenge.id &&
+                updateChallenge(
+                  challenge.id,
+                  "challange_end",
+                  toBackendDateFormat(e.target.value) // Konvertiert ins Backend-Format
+                )
+              }
+              value={toInputDateFormat(challenge.header.challange_end)} // Konvertiert ins Input-Format
               id="end_time"
               className="text-gray-500 bg-transparent bg-violet-50 w-full"
             />

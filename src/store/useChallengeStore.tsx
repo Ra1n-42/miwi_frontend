@@ -2,26 +2,49 @@
 import { create } from "zustand";
 import { Challenge } from "@/types/challangeTypes";
 import { immer } from "zustand/middleware/immer";
-import { useToast } from "@/hooks/use-toast"
-import { ToastAction } from "@/components/ui/toast"
-import { formatDate } from "@/utils/dateUtils";
+import { ToastAction } from "@/components/ui/toast";
+import { toBackendDateFormat } from "@/utils/dateUtils";
 import { challengeService } from "@/api/challengeService";
-import { data } from "react-router-dom";
 
 interface ChallengeStore {
   challenges: Challenge[]; // die interface von Challange
   fetchChallenges: () => Promise<void>; // Wird automatisch aufgerufen
   addChallenge: () => void;
   deleteChallenge: (id: string, toast: any) => void;
-  updateChallenge: (challengeId: string, key: keyof Challenge["header"], value: string) => void;
+  updateChallenge: (
+    challengeId: string,
+    key: keyof Challenge["header"],
+    value: string
+  ) => void;
   addSection: (challengeId: string) => void;
   addTask: (challengeId: string, sectionId: number) => void;
   deleteSection: (challengeId: string, sectionIndex: number) => void;
-  deleteTask: (challengeId: string, sectionIndex: number, taskIndex: number) => void;
-  toggleItemCompletion: (challengeId: string, sectionIndex: number, itemIndex: number) => void;
-  updateSectionTitle: (challengeId: string, sectionIndex: number, newTitle: string) => void;
-  updateTaskText: (challengeId: string, sectionIndex: number, itemIndex: number, newText: string) => void;
-  addSubchallenge: (challengeId: string, sectionIndex: number, taskIndex: number) => void;
+  deleteTask: (
+    challengeId: string,
+    sectionIndex: number,
+    taskIndex: number
+  ) => void;
+  toggleItemCompletion: (
+    challengeId: string,
+    sectionIndex: number,
+    itemIndex: number
+  ) => void;
+  updateSectionTitle: (
+    challengeId: string,
+    sectionIndex: number,
+    newTitle: string
+  ) => void;
+  updateTaskText: (
+    challengeId: string,
+    sectionIndex: number,
+    itemIndex: number,
+    newText: string
+  ) => void;
+  addSubchallenge: (
+    challengeId: string,
+    sectionIndex: number,
+    taskIndex: number
+  ) => void;
   updateSubchallengeText: (
     challengeId: string,
     sectionIndex: number,
@@ -29,7 +52,12 @@ interface ChallengeStore {
     subIndex: number,
     newText: string
   ) => void;
-  deleteSubchallenge: (challengeId: string, sectionIndex: number, taskIndex: number, subtaskIndex: number) => void;
+  deleteSubchallenge: (
+    challengeId: string,
+    sectionIndex: number,
+    taskIndex: number,
+    subtaskIndex: number
+  ) => void;
   saveChallenge: (challenge: Challenge, toast: any) => void;
 }
 
@@ -38,7 +66,9 @@ export const useChallengeStore = create<ChallengeStore>()(
     challenges: [],
     fetchChallenges: async () => {
       const data = await challengeService.fetchChallenges();
-      set(state => { state.challenges = data; });
+      set((state) => {
+        state.challenges = data;
+      });
     },
     addChallenge: () => {
       const newChallenge: Challenge = {
@@ -60,24 +90,30 @@ export const useChallengeStore = create<ChallengeStore>()(
       if (id.startsWith("NEW-")) {
         // Lokale Challenge löschen (nicht in der Datenbank)
         set((state) => {
-          state.challenges = state.challenges.filter((challenge) => challenge.id !== id);
+          state.challenges = state.challenges.filter(
+            (challenge) => challenge.id !== id
+          );
         });
         console.log(`Lokale Challenge mit ID ${id} gelöscht.`);
         return;
       }
 
-      const confirmDelete = window.confirm("Möchtest du diese Challenge wirklich löschen?");
+      const confirmDelete = window.confirm(
+        "Möchtest du diese Challenge wirklich löschen?"
+      );
       if (!confirmDelete) return;
 
       try {
-
         await challengeService.deleteChallenge(id);
-        set(state => {
-          state.challenges = state.challenges.filter((challenge) => challenge.id !== id);
+        set((state) => {
+          state.challenges = state.challenges.filter(
+            (challenge) => challenge.id !== id
+          );
         });
         toast({
           description: "Challenge erfolgreich gelöscht!",
         });
+        console.log("Challenge erfolgreich gelöscht!");
       } catch (error) {
         toast({
           variant: "destructive",
@@ -88,7 +124,11 @@ export const useChallengeStore = create<ChallengeStore>()(
       }
     },
 
-    updateChallenge: (challengeId: string, key: keyof Challenge["header"], value: string) => {
+    updateChallenge: (
+      challengeId: string,
+      key: keyof Challenge["header"],
+      value: string
+    ) => {
       set((state) => {
         state.challenges = state.challenges.map((challenge) =>
           challenge.id === challengeId
@@ -103,16 +143,16 @@ export const useChallengeStore = create<ChallengeStore>()(
         state.challenges = state.challenges.map((challenge) =>
           challenge.id === challengeId
             ? {
-              ...challenge,
-              sections: [
-                ...challenge.sections,
-                {
-                  id: `NEW-${Date.now()}`,
-                  title: "Neue Sektion",
-                  items: [],
-                },
-              ],
-            }
+                ...challenge,
+                sections: [
+                  ...challenge.sections,
+                  {
+                    id: `NEW-${Date.now()}`,
+                    title: "Neue Sektion",
+                    items: [],
+                  },
+                ],
+              }
             : challenge
         );
       }),
@@ -147,7 +187,11 @@ export const useChallengeStore = create<ChallengeStore>()(
         }
       }),
 
-    deleteTask: (challengeId: string, sectionIndex: number, taskIndex: number) =>
+    deleteTask: (
+      challengeId: string,
+      sectionIndex: number,
+      taskIndex: number
+    ) =>
       set((state) => {
         const challenge = state.challenges.find(
           (challenge) => challenge.id === challengeId
@@ -161,8 +205,11 @@ export const useChallengeStore = create<ChallengeStore>()(
         }
       }),
 
-
-    toggleItemCompletion: (challengeId: string, sectionIndex: number, itemIndex: number) =>
+    toggleItemCompletion: (
+      challengeId: string,
+      sectionIndex: number,
+      itemIndex: number
+    ) =>
       set((state) => {
         const challenge = state.challenges.find(
           (challenge) => challenge.id === challengeId
@@ -179,7 +226,11 @@ export const useChallengeStore = create<ChallengeStore>()(
         }
       }),
 
-    updateSectionTitle: (challengeId: string, sectionIndex: number, newTitle: string) =>
+    updateSectionTitle: (
+      challengeId: string,
+      sectionIndex: number,
+      newTitle: string
+    ) =>
       set((state) => {
         const challenge = state.challenges.find(
           (challenge) => challenge.id === challengeId
@@ -193,7 +244,12 @@ export const useChallengeStore = create<ChallengeStore>()(
         }
       }),
 
-    updateTaskText: (challengeId: string, sectionIndex: number, itemIndex: number, newText: string) =>
+    updateTaskText: (
+      challengeId: string,
+      sectionIndex: number,
+      itemIndex: number,
+      newText: string
+    ) =>
       set((state) => {
         const challenge = state.challenges.find(
           (challenge) => challenge.id === challengeId
@@ -210,7 +266,11 @@ export const useChallengeStore = create<ChallengeStore>()(
         }
       }),
 
-    addSubchallenge: (challengeId: string, sectionIndex: number, taskIndex: number) =>
+    addSubchallenge: (
+      challengeId: string,
+      sectionIndex: number,
+      taskIndex: number
+    ) =>
       set((state) => {
         const challenge = state.challenges.find(
           (challenge) => challenge.id === challengeId
@@ -282,20 +342,29 @@ export const useChallengeStore = create<ChallengeStore>()(
       }),
 
     saveChallenge: async (challenge: Challenge, toast: any) => {
-      const isEditMode = challenge.id ? !challenge.id.startsWith("NEW-") : false;
-      const baseUrl = window.location.hostname === "localhost" ? "http://localhost:5173" : "https://dev.miwi.tv";
-      const url = `${baseUrl}/api/challange/${isEditMode ? `update/${challenge.id}` : "create"}`; // Kurzschreibweise
+      const isEditMode = challenge.id
+        ? !challenge.id.startsWith("NEW-")
+        : false;
+      const baseUrl =
+        window.location.hostname === "localhost"
+          ? "http://localhost:5173"
+          : "https://dev.miwi.tv";
+      const url = `${baseUrl}/api/challange/${
+        isEditMode ? `update/${challenge.id}` : "create"
+      }`; // Kurzschreibweise
 
       const method = isEditMode ? "PUT" : "POST";
 
       const requestBody = {
+        id: challenge.id,
         header: {
           title: challenge.header.title,
           description: challenge.header.description,
-          created_at: formatDate(challenge.header.created_at),
-          challange_end: formatDate(challenge.header.challange_end),
+          created_at: toBackendDateFormat(challenge.header.created_at),
+          challange_end: toBackendDateFormat(challenge.header.challange_end),
         },
         sections: challenge.sections.map((section) => ({
+          id: section.id,
           title: section.title,
           items: section.items.map((item) => ({
             id: item.id || `NEW-${Date.now()}`, // Falls keine ID vorhanden, generiere temporäre ID
@@ -312,7 +381,6 @@ export const useChallengeStore = create<ChallengeStore>()(
       console.log("Request Body:", JSON.stringify(requestBody, null, 2)); // Schön formatiertes Logging
 
       try {
-
         if (window.location.hostname === "localhost") {
           await new Promise((resolve) => setTimeout(resolve, 1000)); // Simuliere eine Verzögerung von 1 Sekunde
           toast({ description: "Mock: Challenge erfolgreich gespeichert!" });
@@ -337,7 +405,9 @@ export const useChallengeStore = create<ChallengeStore>()(
 
           const errorMessage =
             errorData?.detail?.message ||
-            `Fehler beim ${isEditMode ? "Aktualisieren" : "Erstellen"} der Challenge.`;
+            `Fehler beim ${
+              isEditMode ? "Aktualisieren" : "Erstellen"
+            } der Challenge.`;
 
           toast({
             variant: "destructive",
