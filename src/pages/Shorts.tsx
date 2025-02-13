@@ -31,18 +31,15 @@ const Shorts: React.FC = () => {
 
   // React Query Hook für Clips
   const { data: clips = [], isLoading } = useQuery<Clip[]>({
-    queryKey: ['clips'],
+    queryKey: ["clips"],
     queryFn: async () => {
+      console.log("fetch clips");
       const response = await fetch(`${API_BASE_URL}/clip/all`);
       if (!response.ok) {
-        throw new Error('Network response was not ok');
+        throw new Error("Network response was not ok");
       }
       return response.json();
     },
-    // Aktualisiert die Daten alle 60 Minuten im Hintergrund
-    staleTime: 1000 * 60 * 60, // 1 Stunde
-    refetchInterval: 1000 * 60 * 60, // 1 Stunde
-    refetchOnWindowFocus: false,
   });
 
   // Like Mutation
@@ -60,9 +57,11 @@ const Shorts: React.FC = () => {
     },
     onSuccess: (updatedClip) => {
       // Cache aktualisieren
-      queryClient.setQueryData<Clip[]>(['clips'], (oldClips) =>
-        oldClips?.map(clip =>
-          clip.id === updatedClip.id ? { ...clip, likes: updatedClip.likes } : clip
+      queryClient.setQueryData<Clip[]>(["clips"], (oldClips) =>
+        oldClips?.map((clip) =>
+          clip.id === updatedClip.id
+            ? { ...clip, likes: updatedClip.likes }
+            : clip
         )
       );
     },
@@ -201,20 +200,22 @@ const Shorts: React.FC = () => {
               <button
                 onClick={prevClip}
                 disabled={currentClipIndex === 0}
-                className={`px-4 py-2 rounded-md text-white font-semibold ${currentClipIndex === 0
+                className={`px-4 py-2 rounded-md text-white font-semibold ${
+                  currentClipIndex === 0
                     ? "bg-gray-500 cursor-not-allowed"
                     : "bg-blue-500 hover:bg-blue-600"
-                  }`}
+                }`}
               >
                 <ChevronLeft />
               </button>
               <button
                 onClick={nextClip}
                 disabled={currentClipIndex === sortedClips.length - 1}
-                className={`px-4 py-2 rounded-md text-white font-semibold ${currentClipIndex === sortedClips.length - 1
+                className={`px-4 py-2 rounded-md text-white font-semibold ${
+                  currentClipIndex === sortedClips.length - 1
                     ? "bg-gray-500 cursor-not-allowed"
                     : "bg-blue-500 hover:bg-blue-600"
-                  }`}
+                }`}
               >
                 <ChevronRight />
               </button>
