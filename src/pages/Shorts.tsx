@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 import { useNavigate } from "react-router-dom";
@@ -6,8 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
-// Clip-Datenstruktur
 interface Clip {
   creator_name: string;
   id: string;
@@ -19,35 +19,61 @@ interface Clip {
 const Shorts: React.FC = () => {
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const { user } = useUser();
-  const [clips, setClips] = useState<Clip[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [currentClipIndex, setCurrentClipIndex] = useState(0);
   const [ratedClips] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState("trending");
   const navigate = useNavigate();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const LOCAL_STORAGE_KEY = "shorts_currentClipIndex";
   const LOCAL_STORAGE_TAB_KEY = "shorts_activeTab";
 
-  // Clips abrufen
-  const fetchClips = useCallback(async () => {
-    setIsLoading(true);
-    try {
+  // React Query Hook für Clips
+  const { data: clips = [], isLoading } = useQuery<Clip[]>({
+    queryKey: ['clips'],
+    queryFn: async () => {
       const response = await fetch(`${API_BASE_URL}/clip/all`);
-      if (response.ok) {
-        const data: Clip[] = await response.json();
-        setClips(data);
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
       }
-    } catch (error) {
-      console.error("Fehler beim Laden der Clips:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+      return response.json();
+    },
+    // Aktualisiert die Daten alle 60 Minuten im Hintergrund
+    staleTime: 1000 * 60 * 60, // 1 Stunde
+    refetchInterval: 1000 * 60 * 60, // 1 Stunde
+    refetchOnWindowFocus: false,
+  });
+
+  // Like Mutation
+  const likeMutation = useMutation({
+    mutationFn: async (clipId: string) => {
+      const response = await fetch(`${API_BASE_URL}/clip/like/${clipId}`, {
+        method: "POST",
+        credentials: "include",
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail.message);
+      }
+      return response.json();
+    },
+    onSuccess: (updatedClip) => {
+      // Cache aktualisieren
+      queryClient.setQueryData<Clip[]>(['clips'], (oldClips) =>
+        oldClips?.map(clip =>
+          clip.id === updatedClip.id ? { ...clip, likes: updatedClip.likes } : clip
+        )
+      );
+    },
+    onError: (error: Error) => {
+      toast({
+        description: error.message,
+      });
+    },
+  });
 
   useEffect(() => {
-    fetchClips();
     const savedIndex = localStorage.getItem(LOCAL_STORAGE_KEY);
     const savedTab = localStorage.getItem(LOCAL_STORAGE_TAB_KEY);
 
@@ -58,27 +84,15 @@ const Shorts: React.FC = () => {
     if (savedTab) {
       setActiveTab(savedTab);
     }
-  }, [fetchClips]);
+  }, []);
 
-  // Clip-Index speichern, wenn er sich ändert
   useEffect(() => {
     localStorage.setItem(LOCAL_STORAGE_KEY, currentClipIndex.toString());
   }, [currentClipIndex]);
 
-  // Aktiven Tab speichern, wenn er sich ändert
   useEffect(() => {
     localStorage.setItem(LOCAL_STORAGE_TAB_KEY, activeTab);
   }, [activeTab]);
-
-  // Clips nach Popularität sortieren
-  const getSortedClips = () => {
-    if (activeTab === "best") {
-      return [...clips].sort((a, b) => b.likes - a.likes);
-    }
-    return [...clips].sort(
-      (a, b) => calculatePopularityScore(b) - calculatePopularityScore(a)
-    );
-  };
 
   const calculatePopularityScore = (clip: Clip) => {
     const daysSinceCreation =
@@ -91,6 +105,15 @@ const Shorts: React.FC = () => {
     return (
       (clip.view_count * viewWeight + clip.likes * likeWeight) /
       (daysSinceCreation + freshnessWeight)
+    );
+  };
+
+  const getSortedClips = () => {
+    if (activeTab === "best") {
+      return [...clips].sort((a, b) => b.likes - a.likes);
+    }
+    return [...clips].sort(
+      (a, b) => calculatePopularityScore(b) - calculatePopularityScore(a)
     );
   };
 
@@ -111,33 +134,7 @@ const Shorts: React.FC = () => {
       navigate("/login", { state: { from: window.location.pathname } });
       return;
     }
-    likeClip(clipId);
-  };
-
-  const likeClip = async (clipId: string) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/clip/like/${clipId}`, {
-        method: "POST",
-        credentials: "include",
-      });
-
-      if (response.ok) {
-        const updatedClip = await response.json();
-        setClips((prevClips) =>
-          prevClips.map((clip) =>
-            clip.id === clipId ? { ...clip, likes: updatedClip.likes } : clip
-          )
-        );
-      } else {
-        const errorData = await response.json();
-        toast({
-          description: errorData.detail.message,
-        });
-        console.error("Fehler beim Liken:", errorData.detail);
-      }
-    } catch (error) {
-      console.error("Netzwerkfehler:", error);
-    }
+    likeMutation.mutate(clipId);
   };
 
   const sortedClips = getSortedClips();
@@ -190,7 +187,7 @@ const Shorts: React.FC = () => {
                 </div>
                 <Button
                   variant="secondary"
-                  className={`mt-4 px-4 py-2 rounded-md  font-semibold `}
+                  className="mt-4 px-4 py-2 rounded-md font-semibold"
                   onClick={() => handleThumbsUp(currentClip.id)}
                   disabled={ratedClips.has(currentClip.id)}
                 >
@@ -204,22 +201,20 @@ const Shorts: React.FC = () => {
               <button
                 onClick={prevClip}
                 disabled={currentClipIndex === 0}
-                className={`px-4 py-2 rounded-md text-white font-semibold ${
-                  currentClipIndex === 0
+                className={`px-4 py-2 rounded-md text-white font-semibold ${currentClipIndex === 0
                     ? "bg-gray-500 cursor-not-allowed"
                     : "bg-blue-500 hover:bg-blue-600"
-                }`}
+                  }`}
               >
                 <ChevronLeft />
               </button>
               <button
                 onClick={nextClip}
                 disabled={currentClipIndex === sortedClips.length - 1}
-                className={`px-4 py-2 rounded-md text-white font-semibold ${
-                  currentClipIndex === sortedClips.length - 1
+                className={`px-4 py-2 rounded-md text-white font-semibold ${currentClipIndex === sortedClips.length - 1
                     ? "bg-gray-500 cursor-not-allowed"
                     : "bg-blue-500 hover:bg-blue-600"
-                }`}
+                  }`}
               >
                 <ChevronRight />
               </button>
