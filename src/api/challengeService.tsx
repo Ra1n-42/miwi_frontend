@@ -2,6 +2,10 @@ export const challengeService = {
   async fetchChallenges() {
     const response = await fetch("https://dev.miwi.tv/api/challange/all");
     // const response = await fetch("/challanges.json");
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
     return response.json();
   },
   async deleteChallenge(id: string) {
@@ -10,6 +14,9 @@ export const challengeService = {
       {
         method: "DELETE",
         credentials: "include", // JWT Auth
+        headers: {
+          "Content-Type": "application/json",
+        },
       }
     );
     // Mock response für Testzwecke
@@ -19,6 +26,15 @@ export const challengeService = {
     //   statusText: "OK",
     //   json: async () => ({ detail: "lol" }), // Dummy JSON-Antwort
     // };
-    return response.json();
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data.detail || `Failed to delete challenge: ${response.status}`
+      );
+    }
+
+    return data;
   },
 };

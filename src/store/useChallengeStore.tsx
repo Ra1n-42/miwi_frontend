@@ -71,16 +71,30 @@ export const useChallengeStore = create<ChallengeStore>()(
       });
     },
     addChallenge: () => {
+      // Aktuelles Datum und Datum + 1 Tag berechnen
+      const currentDate = new Date();
+      const nextDate = new Date(currentDate);
+      nextDate.setDate(currentDate.getDate() + 1); // Datum + 1 Tag
+
+      // Funktion zum Formatieren des Datums in 'DD-MM-YYYY'
+      const formatDate = (date: Date) => {
+        const day = String(date.getDate()).padStart(2, "0"); // sicherstellen, dass der Tag immer 2 Stellen hat
+        const month = String(date.getMonth() + 1).padStart(2, "0"); // Monate beginnen bei 0
+        const year = date.getFullYear();
+        return `${day}-${month}-${year}`;
+      };
+
       const newChallenge: Challenge = {
         id: `NEW-${Date.now()}`,
         header: {
           title: "Neue Challenge",
           description: "Beschreibung",
-          created_at: "DD.MM.YYYY",
-          challange_end: "DD.MM.YYYY",
+          created_at: formatDate(currentDate),
+          challange_end: formatDate(nextDate),
         },
         sections: [],
       };
+
       set((state) => {
         state.challenges.unshift(newChallenge);
       });
@@ -98,10 +112,9 @@ export const useChallengeStore = create<ChallengeStore>()(
         return;
       }
 
-      const confirmDelete = window.confirm(
-        "Möchtest du diese Challenge wirklich löschen?"
-      );
-      if (!confirmDelete) return;
+      if (!window.confirm("Möchtest du diese Challenge wirklich löschen?")) {
+        return;
+      }
 
       try {
         await challengeService.deleteChallenge(id);
