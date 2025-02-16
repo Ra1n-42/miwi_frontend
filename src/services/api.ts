@@ -14,8 +14,8 @@ interface LikeResponse {
 export const clipService = {
     async getAllClips(): Promise<ApiResponse<Clip[]>> {
       try {
-        // const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.CLIPS.ALL}`);
-        const response = await fetch(`/clips_data.json`);
+        const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.CLIPS.ALL}`);
+        // const response = await fetch(`/clips_data.json`);
         if (!response.ok) {
           throw new Error('Failed to fetch clips');
         }

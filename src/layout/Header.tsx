@@ -1,5 +1,5 @@
 import { User } from "@/types/User";
-import { Menu  } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { useEffect, useState } from "react";
 import { useUser } from "@/context/UserContext";
 import StreamerStatus from "@/components/StreamerStatus";
@@ -8,7 +8,7 @@ import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, Dr
 
 
 const navigation = [
-  { title: "Giveaway", href: "/giveaway" },
+  // { title: "Giveaway", href: "/giveaway" },
   { title: "Archive", href: "/archive" },
   { title: "Challange", href: "/challange" },
   { title: "Clips", href: "/clips" },
@@ -37,7 +37,7 @@ export default function Header() {
 
   useEffect(() => {
     const handleResize = () => {
-      setIsLargeScreen(window.innerWidth >= 620); 
+      setIsLargeScreen(window.innerWidth >= 620);
     };
     handleResize();
     window.addEventListener("resize", handleResize);
@@ -56,14 +56,14 @@ export default function Header() {
           MiwiTV
         </a>
       </div>
-      {isLargeScreen ? 
-          <LargeScreenNavigation user={user}/> 
-      
-      : 
+      {isLargeScreen ?
+        <LargeScreenNavigation user={user} />
+
+        :
         <div className="pt-2.5">
-          <DrawerNavigation user={user}/>
+          <DrawerNavigation user={user} />
         </div>
-        }
+      }
     </div>
   )
 }

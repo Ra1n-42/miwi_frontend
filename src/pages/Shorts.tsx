@@ -118,7 +118,7 @@ const Shorts: React.FC = () => {
   };
 
   // Flag, um zwischen Mock und echtem API-Aufruf zu wechseln
-  const isMock = true;
+  const isMock = false;
 
   // Mock-Funktion, die einen Like simuliert
   const mockLikeClip = async (
@@ -269,22 +269,20 @@ const Shorts: React.FC = () => {
                 <button
                   onClick={prevClip}
                   disabled={currentClipIndex === 0}
-                  className={`w-9 h-9 flex justify-center items-center rounded-full text-black font-semibold ${
-                    currentClipIndex === 0
-                      ? "bg-gray-500 cursor-not-allowed"
-                      : "bg-white hover:bg-blue-600"
-                  }`}
+                  className={`w-9 h-9 flex justify-center items-center rounded-full text-black font-semibold ${currentClipIndex === 0
+                    ? "bg-gray-500 cursor-not-allowed"
+                    : "bg-white hover:bg-blue-600"
+                    }`}
                 >
                   <ChevronUp />
                 </button>
                 <button
                   onClick={nextClip}
                   disabled={currentClipIndex === sortedClips.length - 1}
-                  className={`w-9 h-9 flex justify-center items-center pt-1 rounded-full text-black font-semibold ${
-                    currentClipIndex === sortedClips.length - 1
-                      ? "bg-gray-500 cursor-not-allowed"
-                      : "bg-white hover:bg-blue-600"
-                  }`}
+                  className={`w-9 h-9 flex justify-center items-center pt-1 rounded-full text-black font-semibold ${currentClipIndex === sortedClips.length - 1
+                    ? "bg-gray-500 cursor-not-allowed"
+                    : "bg-white hover:bg-blue-600"
+                    }`}
                 >
                   <ChevronDown />
                 </button>
@@ -305,19 +303,19 @@ const Shorts: React.FC = () => {
         <div className="space-y-3">
           <div className="text-white text-xl font-semibold">Liked Clips</div>
           <ScrollArea
-            className="flex flex-col gap-4 overflow-y-auto xl:h-[35.3rem] lg:h-[26rem]"
+            className="flex flex-col overflow-y-auto xl:h-[35.3rem] lg:h-[26rem]"
             onScroll={handleScroll}
           >
             {isLoadingLikedClips ? (
               <div className="text-white text-center">
-                <div className="relative w-[200px] lg:w-[290px] h-[90px] flex gap-3">
+                <div className="relative w-[200px] lg:w-[290px] h-[90px] flex">
                   <Loader2 className="animate-spin" />
                   Lade geliked Clips
                 </div>
               </div>
             ) : likedClips.length > 0 ? (
               likedClips.slice(0, visibleLikedClips).map((clip) => (
-                <div className="first:mb-0 pb-2 last:pb-0" key={clip.id}>
+                <div className="relative w-[200px] lg:w-[290px] h-[90px] my-1" key={clip.id}>
                   <LinkedClipsCard
                     clip={clip}
                     onClick={() => handleClipSelect(clip)}
@@ -325,8 +323,7 @@ const Shorts: React.FC = () => {
                 </div>
               ))
             ) : (
-              <div className="relative w-[200px] lg:w-[290px] h-[90px] hover:opacity-80">
-                <div className="w-full h-full" />
+              <div className="relative w-[200px] lg:w-[290px] h-[90px]">
                 <p className="absolute inset-0 flex items-center justify-center text-center text-white">
                   Noch Keine Clips geliked.
                 </p>
