@@ -31,24 +31,18 @@ const Shorts: React.FC = () => {
   // Für Lazy Loading: Anzahl aktuell sichtbarer liked Clips
   const [visibleLikedClips, setVisibleLikedClips] = useState(7);
 
-  const LOCAL_STORAGE_KEY = "shorts_currentClipIndex";
-  const LOCAL_STORAGE_TAB_KEY = "shorts_activeTab";
+  // const [forceRender, setForceRender] = useState(false);
 
-  // Gespeicherte Werte laden
+  // Optional: Den aktiven Tab im localStorage speichern (nur wenn benötigt)
   useEffect(() => {
-    const savedIndex = localStorage.getItem(LOCAL_STORAGE_KEY);
-    const savedTab = localStorage.getItem(LOCAL_STORAGE_TAB_KEY);
-    if (savedIndex) setCurrentClipIndex(Number(savedIndex));
+    const savedTab = localStorage.getItem("shorts_activeTab");
     if (savedTab) setActiveTab(savedTab);
   }, []);
 
-  // Änderungen speichern
   useEffect(() => {
-    localStorage.setItem(LOCAL_STORAGE_KEY, currentClipIndex.toString());
-  }, [currentClipIndex]);
-
-  useEffect(() => {
-    localStorage.setItem(LOCAL_STORAGE_TAB_KEY, activeTab);
+    localStorage.setItem("shorts_activeTab", activeTab);
+    // Beim Wechsel des Tabs wird immer der erste Clip angezeigt:
+    setCurrentClipIndex(0);
   }, [activeTab]);
 
   // Alle Clips laden
@@ -59,6 +53,7 @@ const Shorts: React.FC = () => {
       if (response.error) throw new Error(response.error);
       return response.data;
     },
+    staleTime: 0, // Stelle sicher, dass die Daten immer aktuell sind
   });
 
   // Gelikete Clips laden (nur wenn User eingeloggt)
@@ -89,17 +84,32 @@ const Shorts: React.FC = () => {
     );
   };
 
-  // Clips sortieren basierend auf dem aktiven Tab
   const getSortedClips = () => {
+    // Filtere Clips, die entweder geliked oder gesehen wurden aus
+    const filteredClips = clips.filter(
+      (clip) =>
+        !likedClips.some((likedClip) => likedClip.id === clip.id) &&
+        !seenClips.has(clip.id)
+    );
+
     if (activeTab === "best") {
-      return [...clips].sort((a, b) => b.likes - a.likes);
+      return [...filteredClips].sort((a, b) => b.likes - a.likes);
     }
-    return [...clips].sort(
+
+    return [...filteredClips].sort(
       (a, b) => calculatePopularityScore(b) - calculatePopularityScore(a)
     );
   };
 
   const nextClip = () => {
+    if (currentClip) {
+      setSeenClips((prev) => {
+        const updatedSet = new Set(prev).add(currentClip.id);
+        localStorage.setItem("seenClips", JSON.stringify([...updatedSet])); // Speichern
+        return updatedSet;
+      });
+    }
+
     setSelectedClip(null);
     if (currentClipIndex < getSortedClips().length - 1) {
       setCurrentClipIndex((prev) => prev + 1);
@@ -112,7 +122,10 @@ const Shorts: React.FC = () => {
       setCurrentClipIndex((prev) => prev - 1);
     }
   };
-
+  const [seenClips, setSeenClips] = useState<Set<string>>(() => {
+    const saved = localStorage.getItem("seenClips");
+    return saved ? new Set(JSON.parse(saved)) : new Set();
+  });
   const handleClipSelect = (clip: Clip) => {
     setSelectedClip(clip);
   };
@@ -140,41 +153,145 @@ const Shorts: React.FC = () => {
       if (likedClips.some((clip) => clip.id === clipId)) {
         throw new Error("Du hast diesen Clip bereits geliked!");
       }
-      // Entscheide, ob der echte API-Aufruf oder der Mock verwendet werden soll
       const response = isMock
         ? await mockLikeClip(clipId)
         : await clipService.likeClip(clipId);
-
       if (response.error) throw new Error(response.error);
       return response.data;
     },
+
+    // onSuccess: (updatedClip) => {
+    //   // **1️⃣ Finde das aktualisierte Clip-Objekt aus dem Cache**
+    //   const completeClip = queryClient
+    //     .getQueryData<Clip[]>(["clips"])
+    //     ?.find((clip) => clip.id === updatedClip.id);
+
+    //   if (!completeClip) return;
+
+    //   // **2️⃣ Aktualisierte Clip-Daten erzeugen**
+    //   const updatedCompleteClip = { ...completeClip, likes: updatedClip.likes };
+
+    //   // **3️⃣ Like-Anzeige im Player sofort updaten**
+    //   if (selectedClip?.id === updatedClip.id) {
+    //     setSelectedClip(updatedCompleteClip);
+    //   }
+
+    //   // **4️⃣ likedClips direkt updaten**
+    //   setRatedClips((prev) => new Set(prev).add(updatedClip.id));
+
+    //   queryClient.setQueryData<Clip[]>(["likedClips"], (oldLikedClips = []) => {
+    //     if (!oldLikedClips.some((clip) => clip.id === updatedClip.id)) {
+    //       return [updatedCompleteClip, ...oldLikedClips];
+    //     }
+    //     return oldLikedClips;
+    //   });
+
+    //   // **5️⃣ Clips-Liste direkt im Cache aktualisieren**
+    //   queryClient.setQueryData<Clip[]>(["clips"], (oldClips = []) =>
+    //     oldClips.map((clip) =>
+    //       clip.id === updatedClip.id ? updatedCompleteClip : clip
+    //     )
+    //   );
+
+    //   // **6️⃣ Falls UI nicht direkt reagiert, eine forceUpdate-Variable setzen**
+    //   setForceRender((prev) => !prev);
+
+    //   // **7️⃣ UI nach einem Frame aktualisieren**
+    //   requestAnimationFrame(() => {
+    //     queryClient.invalidateQueries({ queryKey: ["clips"] });
+    //     queryClient.invalidateQueries({ queryKey: ["likedClips"] });
+    //   });
+
+    //   toast({ description: "Clip erfolgreich geliked!" });
+    // },
+
+    // onSuccess: (updatedClip) => {
+    //   const completeClip = queryClient
+    //     .getQueryData<Clip[]>(["clips"])
+    //     ?.find((clip) => clip.id === updatedClip.id);
+
+    //   // Entferne den Clip aus der Hauptliste "clips"
+    //   queryClient.setQueryData<Clip[]>(["clips"], (oldClips = []) =>
+    //     oldClips.filter((clip) => clip.id !== updatedClip.id)
+    //   );
+
+    //   // Entferne den Clip aus "trendingClips"
+    //   queryClient.setQueryData<Clip[]>(["trendingClips"], (oldTrending = []) =>
+    //     oldTrending.filter((clip) => clip.id !== updatedClip.id)
+    //   );
+
+    //   // Entferne den Clip aus "bestClips"
+    //   queryClient.setQueryData<Clip[]>(["bestClips"], (oldBest = []) =>
+    //     oldBest.filter((clip) => clip.id !== updatedClip.id)
+    //   );
+
+    //   // Falls das aktuell abgespielte Video geliked wurde, Like-Button deaktivieren
+    //   if (selectedClip?.id === updatedClip.id) {
+    //     setRatedClips((prev) => new Set(prev).add(updatedClip.id));
+    //   }
+
+    //   // Füge den Clip zu "likedClips" hinzu
+    //   if (completeClip) {
+    //     queryClient.setQueryData<Clip[]>(
+    //       ["likedClips"],
+    //       (oldLikedClips = []) => {
+    //         if (!oldLikedClips.find((clip) => clip.id === completeClip.id)) {
+    //           return [completeClip, ...oldLikedClips];
+    //         }
+    //         return oldLikedClips;
+    //       }
+    //     );
+    //   }
+
+    //   // Invalide Queries, um sicherzustellen, dass UI-Updates korrekt erfolgen
+    //   queryClient.invalidateQueries({ queryKey: ["clips"] });
+    //   queryClient.invalidateQueries({ queryKey: ["trendingClips"] });
+    //   queryClient.invalidateQueries({ queryKey: ["bestClips"] });
+    //   queryClient.invalidateQueries({ queryKey: ["likedClips"] });
+
+    //   toast({ description: "Clip erfolgreich geliked!" });
+    // },
+
     onSuccess: (updatedClip) => {
-      // Aktualisiere den Clips-Cache
-      queryClient.setQueryData<Clip[]>(["clips"], (oldClips) =>
-        oldClips?.map((clip) =>
-          clip.id === updatedClip.id
-            ? { ...clip, likes: updatedClip.likes }
-            : clip
-        )
-      );
-      // Falls der aktuelle Clip selektiert ist, update diesen Zustand ebenfalls
-      if (selectedClip && selectedClip.id === updatedClip.id) {
-        setSelectedClip({ ...selectedClip, likes: updatedClip.likes });
-      }
-      // Füge den geliketen Clip zum likedClips-Cache hinzu, sofern vorhanden
       const completeClip = queryClient
         .getQueryData<Clip[]>(["clips"])
         ?.find((clip) => clip.id === updatedClip.id);
+
+      // Falls Clip aktiv ist, direkt weiterspringen
+      if (selectedClip?.id === updatedClip.id) {
+        nextClip();
+      }
+
+      // Entferne den Clip aus der Hauptliste "clips"
+      queryClient.setQueryData<Clip[]>(["clips"], (oldClips = []) =>
+        oldClips.filter((clip) => clip.id !== updatedClip.id)
+      );
+
+      // Entferne den Clip aus "trendingClips" und "bestClips"
+      queryClient.setQueryData<Clip[]>(["trendingClips"], (oldTrending = []) =>
+        oldTrending.filter((clip) => clip.id !== updatedClip.id)
+      );
+      queryClient.setQueryData<Clip[]>(["bestClips"], (oldBest = []) =>
+        oldBest.filter((clip) => clip.id !== updatedClip.id)
+      );
+
+      // Füge den Clip zu "likedClips" hinzu
       if (completeClip) {
         queryClient.setQueryData<Clip[]>(
           ["likedClips"],
-          (oldLikedClips = []) => [...oldLikedClips, completeClip]
+          (oldLikedClips = []) => [completeClip, ...oldLikedClips]
         );
       }
-      // Aktualisiere den lokalen ratedClips-State
-      setRatedClips((prev) => new Set(prev).add(updatedClip.id));
+
+      // UI aktualisieren
+      queryClient.invalidateQueries({ queryKey: ["clips"] });
+      queryClient.invalidateQueries({ queryKey: ["trendingClips"] });
+      queryClient.invalidateQueries({ queryKey: ["bestClips"] });
+      queryClient.invalidateQueries({ queryKey: ["likedClips"] });
+
       toast({ description: "Clip erfolgreich geliked!" });
     },
+
     onError: (error: Error) => {
       toast({ variant: "destructive", description: error.message });
     },
@@ -198,6 +315,11 @@ const Shorts: React.FC = () => {
       setVisibleLikedClips((prev) => Math.min(prev + 7, likedClips.length));
     }
   };
+
+  useEffect(() => {
+    // Setze alle likedClips in ratedClips, damit sie nicht mehr geliket werden können
+    setRatedClips(new Set(likedClips.map((clip) => clip.id)));
+  }, [likedClips]);
 
   return (
     <div className="flex flex-col lg:flex-row pb-10">
@@ -249,11 +371,17 @@ const Shorts: React.FC = () => {
                     variant="secondary"
                     className="w-9 h-9 rounded-full bg-white hover:bg-green-500"
                     onClick={() => handleThumbsUp(currentClip.id)}
-                    disabled={ratedClips.has(currentClip.id)}
+                    disabled={
+                      ratedClips.has(currentClip.id) ||
+                      likedClips.some((clip) => clip.id === currentClip.id)
+                    }
                   >
                     <ThumbsUp />
                   </Button>
-                  <div className="mt-1">{currentClip.likes || 0}</div>
+                  <div className="mt-1">
+                    {/* {currentClip.likes || 0} */}
+                    {selectedClip?.likes ?? currentClip?.likes}
+                  </div>
                 </div>
                 <div className="viewer flex flex-col items-center">
                   <button
@@ -269,20 +397,22 @@ const Shorts: React.FC = () => {
                 <button
                   onClick={prevClip}
                   disabled={currentClipIndex === 0}
-                  className={`w-9 h-9 flex justify-center items-center rounded-full text-black font-semibold ${currentClipIndex === 0
-                    ? "bg-gray-500 cursor-not-allowed"
-                    : "bg-white hover:bg-blue-600"
-                    }`}
+                  className={`w-9 h-9 flex justify-center items-center rounded-full text-black font-semibold ${
+                    currentClipIndex === 0
+                      ? "bg-gray-500 cursor-not-allowed"
+                      : "bg-white hover:bg-blue-600"
+                  }`}
                 >
                   <ChevronUp />
                 </button>
                 <button
                   onClick={nextClip}
                   disabled={currentClipIndex === sortedClips.length - 1}
-                  className={`w-9 h-9 flex justify-center items-center pt-1 rounded-full text-black font-semibold ${currentClipIndex === sortedClips.length - 1
-                    ? "bg-gray-500 cursor-not-allowed"
-                    : "bg-white hover:bg-blue-600"
-                    }`}
+                  className={`w-9 h-9 flex justify-center items-center pt-1 rounded-full text-black font-semibold ${
+                    currentClipIndex === sortedClips.length - 1
+                      ? "bg-gray-500 cursor-not-allowed"
+                      : "bg-white hover:bg-blue-600"
+                  }`}
                 >
                   <ChevronDown />
                 </button>
@@ -315,7 +445,10 @@ const Shorts: React.FC = () => {
               </div>
             ) : likedClips.length > 0 ? (
               likedClips.slice(0, visibleLikedClips).map((clip) => (
-                <div className="relative w-[200px] lg:w-[290px] h-[90px] my-1" key={clip.id}>
+                <div
+                  className="relative w-[200px] lg:w-[290px] h-[90px] my-1"
+                  key={clip.id}
+                >
                   <LinkedClipsCard
                     clip={clip}
                     onClick={() => handleClipSelect(clip)}

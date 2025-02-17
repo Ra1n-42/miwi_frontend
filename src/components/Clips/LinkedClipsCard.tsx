@@ -10,7 +10,7 @@ interface LinkedClipsCardProps {
 const LinkedClipsCard: React.FC<LinkedClipsCardProps> = ({ clip, onClick }) => {
   return (
     <div className="cursor-pointer hover:opacity-80" onClick={onClick}>
-      <div className="text-white flex gap-2 space-x-3">
+      <div className="text-white flex space-x-3">
         {isDirectThumbnail(clip.thumbnail_url) ? (
           <img
             src={getCustomThumbnailUrl(clip.thumbnail_url, "160", "90")}
