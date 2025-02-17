@@ -29,4 +29,4 @@ dist/
 .vite/
 .env
 
-frontend/public/data/
+public/data/
