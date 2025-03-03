@@ -1,10 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from '@/components/ui/button';
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+import { Button } from "@/components/ui/button";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import { useToast } from "@/hooks/use-toast";
-import { ToastAction } from "@/components/ui/toast"
-
+import { ToastAction } from "@/components/ui/toast";
+import { API_BASE_URL } from "@/constants/api";
 // Typdefinition für Clip-Daten
 interface Clip {
   title: string;
@@ -17,22 +24,23 @@ interface Clip {
 }
 
 const ClipManagement: React.FC = () => {
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [clips, setClips] = useState<Clip[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   const clipsPerPage = 5; // Clips pro Seite
   const [currentPage, setCurrentPage] = useState<number>(1); // Aktuelle Seite
-  const [tabValue, setTabValue] = useState<'allowed' | 'blocked'>('allowed'); // Aktueller Tab
-  const { toast } = useToast()
-  
+  const [tabValue, setTabValue] = useState<"allowed" | "blocked">("allowed"); // Aktueller Tab
+  const { toast } = useToast();
+
   useEffect(() => {
     const fetchClips = async () => {
       try {
         // Fetch Clips von der API
         // const response = await fetch(`/clips_data.json`);
-        const response = await fetch(`${API_BASE_URL}/clip/all?show_blocked=true`);
+        const response = await fetch(
+          `${API_BASE_URL}/clip/all?show_blocked=true`
+        );
         if (!response.ok) {
           throw new Error("Fehler beim Laden der Clips");
         }
@@ -87,7 +95,7 @@ const ClipManagement: React.FC = () => {
         credentials: "include",
         body: JSON.stringify({ status: !isBlocked }),
       });
-  
+
       if (!response.ok) {
         let errorMessage = "Fehler beim Aktualisieren des Status";
         try {
@@ -96,7 +104,7 @@ const ClipManagement: React.FC = () => {
         } catch {
           // JSON-Fehler ignorieren, Standard-Fehlermeldung verwenden
         }
-  
+
         toast({
           variant: "destructive",
           description: errorMessage,
@@ -104,20 +112,21 @@ const ClipManagement: React.FC = () => {
         });
         throw new Error(errorMessage); // Besser als Promise.reject
       }
-  
+
       // UI-Update nach erfolgreicher Änderung
       setClips((prevClips) =>
         prevClips.map((clip) =>
           clip.id === clipId ? { ...clip, blocked: !isBlocked } : clip
         )
       );
-  
+
       // 🎉 Erfolgreiche Aktion mit Toast anzeigen
       toast({
-        description: `Clip wurde erfolgreich ${isBlocked ? "freigegeben" : "blockiert"}.`,
+        description: `Clip wurde erfolgreich ${
+          isBlocked ? "freigegeben" : "blockiert"
+        }.`,
         action: <ToastAction altText="Ok">Ok</ToastAction>,
       });
-  
     } catch (error) {
       console.error("Fehler:", error);
       toast({
@@ -127,8 +136,6 @@ const ClipManagement: React.FC = () => {
       });
     }
   };
-  
-  
 
   const renderClipList = (clipList: Clip[], isBlocked: boolean) => (
     <ul className="w-full">
@@ -136,7 +143,10 @@ const ClipManagement: React.FC = () => {
         <p className="text-center">Keine Clips verfügbar.</p>
       ) : (
         clipList.map((clip) => (
-          <li key={clip.id} className="border flex items-center justify-evenly space-x-5 p-2 mb-4 rounded-md shadow-md">
+          <li
+            key={clip.id}
+            className="border flex items-center justify-evenly space-x-5 p-2 mb-4 rounded-md shadow-md"
+          >
             <iframe
               src={`https://clips.twitch.tv/embed?clip=${clip.id}&parent=dev.miwi.tv`}
               className="w-80 aspect-video rounded-md"
@@ -148,7 +158,11 @@ const ClipManagement: React.FC = () => {
               <p>Erstellt am: {new Date(clip.created_at).toLocaleString()}</p>
             </div>
             <Button
-              className={isBlocked?"bg-green-500 hover:bg-green-600":"bg-red-500 hover:bg-red-600"}
+              className={
+                isBlocked
+                  ? "bg-green-500 hover:bg-green-600"
+                  : "bg-red-500 hover:bg-red-600"
+              }
               onClick={() => toggleBlockStatus(clip.id, isBlocked)}
             >
               {isBlocked ? "Aktivieren" : "Blockieren"}
@@ -161,15 +175,19 @@ const ClipManagement: React.FC = () => {
 
   return (
     <div className="max-w-5xl mx-auto">
-      <Tabs value={tabValue} onValueChange={(value) => setTabValue(value as 'allowed' | 'blocked')} className="w-full">
+      <Tabs
+        value={tabValue}
+        onValueChange={(value) => setTabValue(value as "allowed" | "blocked")}
+        className="w-full"
+      >
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="allowed">Erlaubte Clips</TabsTrigger>
           <TabsTrigger value="blocked">Blockierte Clips</TabsTrigger>
         </TabsList>
 
         <TabsContent value="allowed">
-          {renderClipList(getClipsForPage(allowedClips), false)} {/* false bedeutet "nicht blockiert" */}
-
+          {renderClipList(getClipsForPage(allowedClips), false)}{" "}
+          {/* false bedeutet "nicht blockiert" */}
           {/* Pagination für erlaubte Clips */}
           <Pagination currentPage={currentPage} lastPage={totalAllowedPages}>
             <PaginationContent>
@@ -201,8 +219,8 @@ const ClipManagement: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="blocked">
-          {renderClipList(getClipsForPage(blockedClips), true)} {/* true bedeutet "blockiert" */}
-
+          {renderClipList(getClipsForPage(blockedClips), true)}{" "}
+          {/* true bedeutet "blockiert" */}
           {/* Pagination für blockierte Clips */}
           <Pagination currentPage={currentPage} lastPage={totalBlockedPages}>
             <PaginationContent>

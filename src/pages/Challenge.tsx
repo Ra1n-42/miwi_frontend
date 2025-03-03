@@ -7,11 +7,12 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Challenge as ChallengeData, Subtask } from "@/types/challangeTypes";
+import { API_BASE_URL, API_ENDPOINTS } from "@/constants/api";
 
 // Separate API function
 const fetchChallenges = async (): Promise<ChallengeData[]> => {
   console.log("Fetching challenges from backend...");
-  const response = await fetch("https://dev.miwi.tv/api/challange/all");
+  const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.CHALLENGE.ALL}`);
   if (!response.ok) {
     throw new Error("Failed to fetch challenges");
   }

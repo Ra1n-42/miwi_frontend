@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { RoleNames, getRoleName } from "@/types/User";
-import { useToast } from "@/hooks/use-toast"
-import { ToastAction } from "@/components/ui/toast"
+import { useToast } from "@/hooks/use-toast";
+import { ToastAction } from "@/components/ui/toast";
+
+import { API_BASE_URL } from "@/constants/api";
 
 interface User {
   id: number;
@@ -19,12 +21,12 @@ const UserManagement: React.FC = () => {
   const [editedRole, setEditedRole] = useState<number | "">("");
   const [editedIsActive, setEditedIsActive] = useState<boolean>(false);
 
-  const { toast } = useToast()
+  const { toast } = useToast();
 
   // Laden der Mock-Daten
   useEffect(() => {
     // fetch("/usersDatabase.json")
-    fetch("https://dev.miwi.tv/api/user/all")
+    fetch(`${API_BASE_URL}/user/all`)
       .then((response) => {
         if (!response.ok) {
           throw new Error("Failed to load user data");
@@ -43,14 +45,14 @@ const UserManagement: React.FC = () => {
 
   const handleSave = () => {
     if (!selectedUser) return;
-  
+
     const updatedUser: User = {
       ...selectedUser,
       role: typeof editedRole === "number" ? editedRole : selectedUser.role,
       is_active: editedIsActive,
     };
-  
-    fetch(`https://dev.miwi.tv/api/user/update`, {
+
+    fetch(`${API_BASE_URL}/user/update`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -58,37 +60,37 @@ const UserManagement: React.FC = () => {
       credentials: "include", // JWT-Auth oder Cookies
       body: JSON.stringify(updatedUser), // Alle benötigten Daten im Body
     })
-    .then(async (response) => {
-      if (!response.ok) {
-        // Wenn die Antwort nicht ok ist, hole die Fehlermeldung aus der Antwort
-        const data = await response.json();
-        // Zeige den Fehler-Toast an
-        console.log(data.detail.message)
-        toast({
-          variant: "destructive",
-          description: data.detail.message || "Fehler beim Aktualisieren des Benutzers.",
-          action: <ToastAction altText="Ok">Ok</ToastAction>,
-        });
-        return await Promise.reject(data.message);
-      }
-      return response.json(); // Weiterverarbeitung der erfolgreichen Antwort
-    })
+      .then(async (response) => {
+        if (!response.ok) {
+          // Wenn die Antwort nicht ok ist, hole die Fehlermeldung aus der Antwort
+          const data = await response.json();
+          // Zeige den Fehler-Toast an
+          console.log(data.detail.message);
+          toast({
+            variant: "destructive",
+            description:
+              data.detail.message || "Fehler beim Aktualisieren des Benutzers.",
+            action: <ToastAction altText="Ok">Ok</ToastAction>,
+          });
+          return await Promise.reject(data.message);
+        }
+        return response.json(); // Weiterverarbeitung der erfolgreichen Antwort
+      })
       .then((data) => {
         // Lokales Update der Benutzerliste
         setUsers((prevUsers) =>
           prevUsers.map((user) => (user.id === data.user.id ? data.user : user))
         );
-  
+
         // Aktualisieren des ausgewählten Benutzers
         setSelectedUser(data.user);
-  
+
         toast({
           description: data.message,
         });
       })
       .catch((error) => console.error("Error updating user:", error));
   };
-  
 
   return (
     <div style={{ display: "flex", gap: "20px", padding: "20px" }}>
@@ -107,7 +109,8 @@ const UserManagement: React.FC = () => {
               }}
               onClick={() => handleUserSelect(user)}
             >
-              {user.display_name} {user.role !== 3 ? " ("+ getRoleName(user.role) +")": ""}
+              {user.display_name}{" "}
+              {user.role !== 3 ? " (" + getRoleName(user.role) + ")" : ""}
             </li>
           ))}
         </ul>
@@ -149,8 +152,8 @@ const UserManagement: React.FC = () => {
                   checked={editedIsActive}
                   onChange={(e) => setEditedIsActive(e.target.checked)}
                   style={{ marginLeft: "10px" }}
-                />
-                {" "}(noch keine funktion)
+                />{" "}
+                (noch keine funktion)
               </label>
             </div>
             <div className="flex justify-center">

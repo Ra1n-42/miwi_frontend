@@ -19,7 +19,7 @@ const LinkedClipsCard: React.FC<LinkedClipsCardProps> = ({ clip, onClick }) => {
           />
         ) : (
           <div className="relative w-[200px] lg:w-[290px] h-[90px] hover:opacity-80">
-            <Skeleton className="w-full h-full bg-slate-700 rounded-md" />
+            <Skeleton className="w-[160px] h-[90px] bg-slate-700 rounded-md" />
             <p className="absolute inset-0 flex items-center justify-center text-center text-white">
               Kein Thumbnail
             </p>

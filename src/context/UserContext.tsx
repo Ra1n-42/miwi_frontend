@@ -6,6 +6,7 @@ import React, {
   ReactNode,
 } from "react";
 import { User } from "@/types/User";
+import { API_BASE_URL } from "@/constants/api";
 
 interface UserContextType {
   user: User | null;
@@ -25,7 +26,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await fetch("https://dev.miwi.tv/api/user/me", {
+        const response = await fetch(`${API_BASE_URL}/user/me`, {
           credentials: "include",
         }); // api call mit jwt auth
         // const response = await fetch("/mockUserData.json"); // mockup

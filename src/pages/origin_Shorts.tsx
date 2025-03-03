@@ -10,9 +10,9 @@ import { Clip } from "@/types/ClipTypes";
 import VideoPlayer from "@/components/Clips/VideoPlayer";
 import LinkedClipsCard from "@/components/Clips/LinkedClipsCard";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { API_BASE_URL } from "@/constants/api";
 
 const Shorts: React.FC = () => {
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const { user } = useUser();
   const [currentClipIndex, setCurrentClipIndex] = useState(0);
   const [ratedClips] = useState<Set<string>>(new Set());

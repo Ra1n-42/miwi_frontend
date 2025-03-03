@@ -54,7 +54,9 @@ const VideoPlayer: React.FC<Props> = ({ currentClip }) => {
     <div className="relative w-full max-w-5xl">
       {isPlaying ? (
         <iframe
-          src={`https://clips.twitch.tv/embed?clip=${currentClip.id}&parent=dev.miwi.tv&autoplay=true`}
+          src={`https://clips.twitch.tv/embed?clip=${currentClip.id}&parent=${
+            import.meta.env.VITE_BASE_DOMAIN
+          }&autoplay=true`}
           className="w-full aspect-video rounded-md"
           allowFullScreen
         />

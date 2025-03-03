@@ -6,6 +6,8 @@ import { ToastAction } from "@/components/ui/toast";
 import { toBackendDateFormat } from "@/utils/dateUtils";
 import { challengeService } from "@/api/challengeService";
 
+import { API_ENDPOINTS, API_BASE_URL } from "@/constants/api";
+
 interface ChallengeStore {
   challenges: Challenge[]; // die interface von Challange
   fetchChallenges: () => Promise<void>; // Wird automatisch aufgerufen
@@ -358,14 +360,10 @@ export const useChallengeStore = create<ChallengeStore>()(
       const isEditMode = challenge.id
         ? !challenge.id.startsWith("NEW-")
         : false;
-      const baseUrl =
-        window.location.hostname === "localhost"
-          ? "http://localhost:5173"
-          : "https://dev.miwi.tv";
-      const url = `${baseUrl}/api/challange/${
+
+      const url = `${API_BASE_URL}/${API_ENDPOINTS.CHALLENGE.BASE}/${
         isEditMode ? `update/${challenge.id}` : "create"
       }`; // Kurzschreibweise
-
       const method = isEditMode ? "PUT" : "POST";
 
       const requestBody = {

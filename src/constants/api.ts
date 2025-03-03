@@ -4,6 +4,11 @@ export const API_ENDPOINTS = {
     LIKED: "/clip/my_liked_clips",
     LIKE: (clipId: string) => `/clip/like/${clipId}`,
   },
+  CHALLENGE: {
+    BASE: "/challenge",
+    ALL: "/challenge/all",
+    DELETE: (id: string) =>`/challenge/delete/${id}`
+  },
 } as const;
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+export const API_BASE_URL = `https://${import.meta.env.VITE_BASE_DOMAIN}/api`;

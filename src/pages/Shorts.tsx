@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { ThumbsUp, Eye, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { useUser } from "@/context/UserContext";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -20,7 +20,7 @@ type LikeResponse = {
 
 const Shorts: React.FC = () => {
   const { user } = useUser();
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -299,7 +299,7 @@ const Shorts: React.FC = () => {
 
   const handleThumbsUp = (clipId: string) => {
     if (!user) {
-      navigate("/login", { state: { from: window.location.pathname } });
+      window.location.replace("/login");
       return;
     }
     likeMutation.mutate(clipId);

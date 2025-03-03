@@ -19,6 +19,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import { API_BASE_URL } from "@/constants/api";
 
 const navigation = [
   // { title: "Giveaway", href: "/giveaway" },
@@ -28,7 +29,7 @@ const navigation = [
 ];
 async function logout() {
   try {
-    const response = await fetch("https://dev.miwi.tv/api/logout", {
+    const response = await fetch(`${API_BASE_URL}/logout`, {
       method: "POST",
       credentials: "include", // Sendet Cookies mit
     });
