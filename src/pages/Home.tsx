@@ -11,6 +11,7 @@ export default function Home() {
             <p>Check meine Social-Media-Accounts</p>
             <p>und bleib auf dem neusten Stand.</p>
           </div>
+          {/* überlegung ob eigenes component hierfür */}
           <div className="socials flex justify-center space-x-2 mt-16 sm:mt-16 text-gray-400 sm:text-lg">
             <a
               href="https://www.twitch.tv/miwitv"
@@ -37,6 +38,15 @@ export default function Home() {
             >
               <div className="hover:bg-red-500 hover:text-white order-r-2 p-2 rounded-lg text-lg font-bold border-b-2 border-red-500 cursor-pointer">
                 YouTube
+              </div>
+            </a>
+            <a
+              href="https://www.tiktok.com/@miwittv"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <div className="hover:bg-gray-800 hover:text-white order-r-2 p-2 rounded-lg text-lg font-bold border-b-2 border-gray-800 cursor-pointer">
+                TikTok
               </div>
             </a>
           </div>

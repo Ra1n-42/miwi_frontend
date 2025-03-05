@@ -148,7 +148,9 @@ const ClipManagement: React.FC = () => {
             className="border flex items-center justify-evenly space-x-5 p-2 mb-4 rounded-md shadow-md"
           >
             <iframe
-              src={`https://clips.twitch.tv/embed?clip=${clip.id}&parent=dev.miwi.tv`}
+              src={`https://clips.twitch.tv/embed?clip=${clip.id}&parent=${
+                import.meta.env.VITE_BASE_DOMAIN
+              }`}
               className="w-80 aspect-video rounded-md"
               allowFullScreen
             />

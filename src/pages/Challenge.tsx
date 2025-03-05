@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+// import {useMutation, useQueryClient} from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import {
   Accordion,
@@ -6,22 +7,41 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Challenge as ChallengeData, Subtask } from "@/types/challangeTypes";
-import { API_BASE_URL, API_ENDPOINTS } from "@/constants/api";
+import {
+  Challenge as ChallengeData,
+  Subtask,
+  // Task,
+} from "@/types/challangeTypes";
+import { API_BASE_URL, API_ENDPOINTS, IS_DEV } from "@/constants/api";
+// import { Switch } from "@/components/ui/switch";
+// import { useUser } from "@/context/UserContext";
 
 // Separate API function
 const fetchChallenges = async (): Promise<ChallengeData[]> => {
-  console.log("Fetching challenges from backend...");
-  const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.CHALLENGE.ALL}`);
-  if (!response.ok) {
-    throw new Error("Failed to fetch challenges");
+  // console.log("Fetching challenges from backend...");
+  if (IS_DEV) {
+    const response = await fetch(`/data/challanges.json`);
+    const data: ChallengeData[] = await response.json();
+    return data.sort(
+      (a, b) =>
+        new Date(b.header.created_at).getTime() -
+        new Date(a.header.created_at).getTime()
+    );
+  } else {
+    const response = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.CHALLENGE.ALL}`
+    );
+    if (!response.ok) {
+      throw new Error("Failed to fetch challenges");
+    }
+    const data: ChallengeData[] = await response.json();
+    console.log(data);
+    return data.sort(
+      (a, b) =>
+        new Date(b.header.created_at).getTime() -
+        new Date(a.header.created_at).getTime()
+    );
   }
-  const data: ChallengeData[] = await response.json();
-  return data.sort(
-    (a, b) =>
-      new Date(b.header.created_at).getTime() -
-      new Date(a.header.created_at).getTime()
-  );
 };
 
 function AccordionDemo({
@@ -68,26 +88,31 @@ function AccordionDemo({
 }
 
 function Challenge() {
-  const [selectedChallenge, setSelectedChallenge] =
-    useState<ChallengeData | null>(null);
-
+  // const { user } = useUser();
+  // const queryClient = useQueryClient();
   const {
     data: challenges = [],
-    isLoading,
+    isLoading: challengesLoading,
     error,
   } = useQuery({
     queryKey: ["challenges"],
     queryFn: fetchChallenges,
-    staleTime: 5 * 60 * 1000, // Data wird als "fresh" für 5 Minuten betrachtet
-    gcTime: 30 * 60 * 1000, // Cache wird für 30 Minuten behalten
+
+    staleTime: 1000,
+    gcTime: 6000,
   });
 
+  // Memoized state to prevent unnecessary re-renders
+  const [selectedChallenge, setSelectedChallenge] =
+    useState<ChallengeData | null>(null);
+
   useEffect(() => {
-    if (challenges.length > 0 && !selectedChallenge) {
+    if (!selectedChallenge && challenges.length > 0) {
       setSelectedChallenge(challenges[0]);
     }
   }, [challenges, selectedChallenge]);
 
+  const isLoading = challengesLoading;
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -114,6 +139,164 @@ function Challenge() {
     );
   }
 
+  // const updateTaskMutation = useMutation({
+  //   mutationFn: async ({
+  //     id,
+  //     completed,
+  //   }: {
+  //     id: Task["id"];
+  //     completed: boolean;
+  //   }) => {
+  //     // const response = await fetch(
+  //     //   `${API_BASE_URL}${
+  //     //     API_ENDPOINTS.CHALLENGE.BASE
+  //     //   }${API_ENDPOINTS.CHALLENGE.TASK(id)}`,
+  //     //   {
+  //     //     method: "PUT",
+  //     //     headers: {
+  //     //       "Content-Type": "application/json",
+  //     //     },
+  //     //     body: JSON.stringify({ completed: completed }),
+  //     //   }
+  //     // );
+
+  //     // if (!response.ok) {
+  //     //   throw new Error("Failed to update subtask");
+  //     // }
+  //     console.log("fetch to Task", id, completed);
+  //     // Rückgabe der Daten, die onSuccess benötigt
+  //     return { id, completed };
+  //   },
+  //   onSuccess: ({ id, completed }: { id: Task["id"]; completed: boolean }) => {
+  //     queryClient.setQueryData(
+  //       ["challenges"],
+  //       (oldChallenges: ChallengeData[] | undefined) => {
+  //         if (!oldChallenges) return;
+  //         return oldChallenges.map((challenge) => {
+  //           return {
+  //             ...challenge,
+  //             sections: challenge.sections.map((section) => ({
+  //               ...section,
+  //               items: section.items.map((item) => {
+  //                 if (item.id === id) {
+  //                   return { ...item, completed: completed };
+  //                 }
+  //                 return item;
+  //               }),
+  //             })),
+  //           };
+  //         });
+  //       }
+  //     );
+  //   },
+  // });
+
+  // const updateSubtaskMutation = useMutation({
+  //   mutationFn: async ({
+  //     id,
+  //     completed,
+  //   }: {
+  //     id: Subtask["id"];
+  //     completed: boolean;
+  //   }) => {
+  //     // const response = await fetch(
+  //     //   `${API_BASE_URL}${
+  //     //     API_ENDPOINTS.CHALLENGE.BASE
+  //     //   }${API_ENDPOINTS.CHALLENGE.SUB(id)}`,
+  //     //   {
+  //     //     method: "PUT",
+  //     //     headers: {
+  //     //       "Content-Type": "application/json",
+  //     //     },
+  //     //     body: JSON.stringify({ completed: completed }),
+  //     //   }
+  //     // );
+
+  //     // if (!response.ok) {
+  //     //   throw new Error("Failed to update subtask");
+  //     // }
+  //     console.log("fetch to subtask/", id, completed);
+  //     // Rückgabe der Daten, die onSuccess benötigt
+  //     return { id, completed };
+  //   },
+  //   onSuccess: ({
+  //     id,
+  //     completed,
+  //   }: {
+  //     id: Subtask["id"];
+  //     completed: boolean;
+  //   }) => {
+  //     queryClient.setQueryData(
+  //       ["challenges"],
+  //       (oldChallenges: ChallengeData[] | undefined) => {
+  //         if (!oldChallenges) return;
+  //         return oldChallenges.map((challenge) => {
+  //           return {
+  //             ...challenge,
+  //             sections: challenge.sections.map((section) => ({
+  //               ...section,
+  //               items: section.items.map((item) => ({
+  //                 ...item,
+  //                 subchallenges: item.subchallenges?.map((subtask) => {
+  //                   if (subtask.id === id) {
+  //                     return { ...subtask, completed: completed };
+  //                   }
+  //                   return subtask;
+  //                 }),
+  //               })),
+  //             })),
+  //           };
+  //         });
+  //       }
+  //     );
+  //   },
+  // });
+
+  // const handleToggleTask = (id: Task["id"], checked: boolean) => {
+  //   if (!selectedChallenge) return;
+
+  //   const updatedChallenge = {
+  //     ...selectedChallenge,
+  //     sections: selectedChallenge.sections.map((section) => ({
+  //       ...section,
+  //       items: section.items.map((item) => {
+  //         if (item.id === id) {
+  //           return { ...item, completed: checked };
+  //         }
+  //         return item;
+  //       }),
+  //     })),
+  //   };
+
+  //   setSelectedChallenge(updatedChallenge);
+  //   updateTaskMutation.mutate({ id, completed: checked });
+  //   console.log("Task toggled", id, checked);
+  // };
+
+  // const handleToggleSubchallenge = (id: Subtask["id"], checked: boolean) => {
+  //   if (!selectedChallenge) return;
+
+  //   const updatedChallenge = {
+  //     ...selectedChallenge,
+  //     sections: selectedChallenge.sections.map((section) => ({
+  //       ...section,
+  //       items: section.items.map((item) => ({
+  //         ...item,
+  //         subchallenges: item.subchallenges?.map((subtask) => {
+  //           if (subtask.id === id) {
+  //             return { ...subtask, completed: checked };
+  //           }
+  //           return subtask;
+  //         }),
+  //       })),
+  //     })),
+  //   };
+
+  //   setSelectedChallenge(updatedChallenge);
+  //   updateSubtaskMutation.mutate({ id, completed: checked });
+  //   // console.log("Subchallenge toggled", subtaskId, checked);
+  // };
+
   const renderSubchallenges = (subchallenges: Subtask[]) => (
     <ul className="list-disc space-y-2">
       {subchallenges.map((sub, idx) => (
@@ -129,6 +312,15 @@ function Challenge() {
             <span className="mr-2">&#9679;</span>
           )}
           {sub.text}
+          {/* {[0, 1, 2].includes(user?.role ?? 3) && (
+            <Switch
+              className="ml-auto"
+              checked={sub.completed}
+              onCheckedChange={(checked) =>
+                handleToggleSubchallenge(sub.id, checked)
+              }
+            />
+          )} */}
         </li>
       ))}
     </ul>
@@ -147,7 +339,7 @@ function Challenge() {
         onSelectChallenge={setSelectedChallenge}
       />
 
-      <section className="flex flex-col space-y-8 w-full justify-center items-center lg:pl-10">
+      <section className="flex flex-col space-y-8 w-full justify-center items-center lg:pl-10 px-2">
         {selectedChallenge ? (
           <>
             <div className="text-center space-y-2">
@@ -183,12 +375,23 @@ function Challenge() {
                         }`}
                       >
                         <div>
-                          {item.completed ? (
-                            <span className="mr-2">&#10003;</span>
-                          ) : (
-                            <span className="mr-2">&#9679;</span>
-                          )}
-                          {item.text}
+                          <div>
+                            {item.completed ? (
+                              <span className="mr-2">&#10003;</span>
+                            ) : (
+                              <span className="mr-2">&#9679;</span>
+                            )}
+                            {item.text}
+                            {/* {[0, 1, 2].includes(user?.role ?? 3) && (
+                              <Switch
+                                className="ml-auto"
+                                checked={item.completed}
+                                onCheckedChange={(checked) =>
+                                  handleToggleTask(item.id, checked)
+                                }
+                              />
+                            )} */}
+                          </div>
                           {item.subchallenges &&
                             item.subchallenges.length > 0 && (
                               <div className="ml-6 mt-2">
