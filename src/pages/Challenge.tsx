@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-// import {useMutation, useQueryClient} from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import {
   Accordion,
@@ -10,16 +10,16 @@ import {
 import {
   Challenge as ChallengeData,
   Subtask,
-  // Task,
+  Task,
 } from "@/types/challangeTypes";
-import { API_BASE_URL, API_ENDPOINTS, IS_DEV } from "@/constants/api";
-// import { Switch } from "@/components/ui/switch";
-// import { useUser } from "@/context/UserContext";
+import { API_BASE_URL, API_ENDPOINTS, IS_DEV, IS_LOCAL } from "@/constants/api";
+import { Switch } from "@/components/ui/switch";
+import { useUser } from "@/context/UserContext";
 
 // Separate API function
 const fetchChallenges = async (): Promise<ChallengeData[]> => {
   // console.log("Fetching challenges from backend...");
-  if (IS_DEV) {
+  if (IS_DEV && IS_LOCAL) {
     const response = await fetch(`/data/challanges.json`);
     const data: ChallengeData[] = await response.json();
     return data.sort(
@@ -88,8 +88,8 @@ function AccordionDemo({
 }
 
 function Challenge() {
-  // const { user } = useUser();
-  // const queryClient = useQueryClient();
+  const { user } = useUser();
+  const queryClient = useQueryClient();
   const {
     data: challenges = [],
     isLoading: challengesLoading,
@@ -97,7 +97,6 @@ function Challenge() {
   } = useQuery({
     queryKey: ["challenges"],
     queryFn: fetchChallenges,
-
     staleTime: 1000,
     gcTime: 6000,
   });
@@ -111,6 +110,105 @@ function Challenge() {
       setSelectedChallenge(challenges[0]);
     }
   }, [challenges, selectedChallenge]);
+
+  const updateTaskMutation = useMutation({
+    mutationFn: async ({
+      id,
+      completed,
+    }: {
+      id: Task["id"];
+      completed: boolean;
+    }) => {
+      // Uncomment this section when ready to connect to backend
+      const response = await fetch(
+        `${API_BASE_URL}${API_ENDPOINTS.CHALLENGE.BASE
+        }${API_ENDPOINTS.CHALLENGE.TASK(id)}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ completed }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to update task");
+      }
+
+      console.log("fetch to Task", id, completed);
+      return { id, completed };
+    },
+    onSuccess: ({ id, completed }) => {
+      queryClient.setQueryData(
+        ["challenges"],
+        (oldChallenges: ChallengeData[] | undefined) => {
+          if (!oldChallenges) return oldChallenges;
+
+          return oldChallenges.map((challenge) => ({
+            ...challenge,
+            sections: challenge.sections.map((section) => ({
+              ...section,
+              items: section.items.map((item) =>
+                item.id === id ? { ...item, completed } : item
+              ),
+            })),
+          }));
+        }
+      );
+    },
+  });
+
+  const updateSubtaskMutation = useMutation({
+    mutationFn: async ({
+      id,
+      completed,
+    }: {
+      id: Subtask["id"];
+      completed: boolean;
+    }) => {
+      // API call to update subtask
+      const response = await fetch(
+        `${API_BASE_URL}${API_ENDPOINTS.CHALLENGE.BASE
+        }${API_ENDPOINTS.CHALLENGE.SUB(id)}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ completed }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to update subtask");
+      }
+
+      console.log("fetch to subtask/", id, completed);
+      return { id, completed };
+    },
+    onSuccess: ({ id, completed }) => {
+      queryClient.setQueryData(
+        ["challenges"],
+        (oldChallenges: ChallengeData[] | undefined) => {
+          if (!oldChallenges) return oldChallenges;
+
+          return oldChallenges.map((challenge) => ({
+            ...challenge,
+            sections: challenge.sections.map((section) => ({
+              ...section,
+              items: section.items.map((item) => ({
+                ...item,
+                subchallenges: item.subchallenges?.map((subtask) =>
+                  subtask.id === id ? { ...subtask, completed } : subtask
+                ),
+              })),
+            })),
+          }));
+        }
+      );
+    },
+  });
 
   const isLoading = challengesLoading;
   if (isLoading) {
@@ -139,172 +237,64 @@ function Challenge() {
     );
   }
 
-  // const updateTaskMutation = useMutation({
-  //   mutationFn: async ({
-  //     id,
-  //     completed,
-  //   }: {
-  //     id: Task["id"];
-  //     completed: boolean;
-  //   }) => {
-  //     // const response = await fetch(
-  //     //   `${API_BASE_URL}${
-  //     //     API_ENDPOINTS.CHALLENGE.BASE
-  //     //   }${API_ENDPOINTS.CHALLENGE.TASK(id)}`,
-  //     //   {
-  //     //     method: "PUT",
-  //     //     headers: {
-  //     //       "Content-Type": "application/json",
-  //     //     },
-  //     //     body: JSON.stringify({ completed: completed }),
-  //     //   }
-  //     // );
+  const handleToggleTask = (id: Task["id"], checked: boolean) => {
+    if (!selectedChallenge) return;
 
-  //     // if (!response.ok) {
-  //     //   throw new Error("Failed to update subtask");
-  //     // }
-  //     console.log("fetch to Task", id, completed);
-  //     // Rückgabe der Daten, die onSuccess benötigt
-  //     return { id, completed };
-  //   },
-  //   onSuccess: ({ id, completed }: { id: Task["id"]; completed: boolean }) => {
-  //     queryClient.setQueryData(
-  //       ["challenges"],
-  //       (oldChallenges: ChallengeData[] | undefined) => {
-  //         if (!oldChallenges) return;
-  //         return oldChallenges.map((challenge) => {
-  //           return {
-  //             ...challenge,
-  //             sections: challenge.sections.map((section) => ({
-  //               ...section,
-  //               items: section.items.map((item) => {
-  //                 if (item.id === id) {
-  //                   return { ...item, completed: completed };
-  //                 }
-  //                 return item;
-  //               }),
-  //             })),
-  //           };
-  //         });
-  //       }
-  //     );
-  //   },
-  // });
+    // Update local state first for immediate UI feedback
+    const updatedChallenge = {
+      ...selectedChallenge,
+      sections: selectedChallenge.sections.map((section) => ({
+        ...section,
+        items: section.items.map((item) => {
+          if (item.id === id) {
+            return { ...item, completed: checked };
+          }
+          return item;
+        }),
+      })),
+    };
 
-  // const updateSubtaskMutation = useMutation({
-  //   mutationFn: async ({
-  //     id,
-  //     completed,
-  //   }: {
-  //     id: Subtask["id"];
-  //     completed: boolean;
-  //   }) => {
-  //     // const response = await fetch(
-  //     //   `${API_BASE_URL}${
-  //     //     API_ENDPOINTS.CHALLENGE.BASE
-  //     //   }${API_ENDPOINTS.CHALLENGE.SUB(id)}`,
-  //     //   {
-  //     //     method: "PUT",
-  //     //     headers: {
-  //     //       "Content-Type": "application/json",
-  //     //     },
-  //     //     body: JSON.stringify({ completed: completed }),
-  //     //   }
-  //     // );
+    setSelectedChallenge(updatedChallenge);
 
-  //     // if (!response.ok) {
-  //     //   throw new Error("Failed to update subtask");
-  //     // }
-  //     console.log("fetch to subtask/", id, completed);
-  //     // Rückgabe der Daten, die onSuccess benötigt
-  //     return { id, completed };
-  //   },
-  //   onSuccess: ({
-  //     id,
-  //     completed,
-  //   }: {
-  //     id: Subtask["id"];
-  //     completed: boolean;
-  //   }) => {
-  //     queryClient.setQueryData(
-  //       ["challenges"],
-  //       (oldChallenges: ChallengeData[] | undefined) => {
-  //         if (!oldChallenges) return;
-  //         return oldChallenges.map((challenge) => {
-  //           return {
-  //             ...challenge,
-  //             sections: challenge.sections.map((section) => ({
-  //               ...section,
-  //               items: section.items.map((item) => ({
-  //                 ...item,
-  //                 subchallenges: item.subchallenges?.map((subtask) => {
-  //                   if (subtask.id === id) {
-  //                     return { ...subtask, completed: completed };
-  //                   }
-  //                   return subtask;
-  //                 }),
-  //               })),
-  //             })),
-  //           };
-  //         });
-  //       }
-  //     );
-  //   },
-  // });
+    // Then send mutation to backend
+    updateTaskMutation.mutate({ id, completed: checked });
+    console.log("Task toggled", id, checked);
+  };
 
-  // const handleToggleTask = (id: Task["id"], checked: boolean) => {
-  //   if (!selectedChallenge) return;
+  const handleToggleSubchallenge = (id: Subtask["id"], checked: boolean) => {
+    if (!selectedChallenge) return;
 
-  //   const updatedChallenge = {
-  //     ...selectedChallenge,
-  //     sections: selectedChallenge.sections.map((section) => ({
-  //       ...section,
-  //       items: section.items.map((item) => {
-  //         if (item.id === id) {
-  //           return { ...item, completed: checked };
-  //         }
-  //         return item;
-  //       }),
-  //     })),
-  //   };
+    // Update local state first for immediate UI feedback
+    const updatedChallenge = {
+      ...selectedChallenge,
+      sections: selectedChallenge.sections.map((section) => ({
+        ...section,
+        items: section.items.map((item) => ({
+          ...item,
+          subchallenges: item.subchallenges?.map((subtask) => {
+            if (subtask.id === id) {
+              return { ...subtask, completed: checked };
+            }
+            return subtask;
+          }),
+        })),
+      })),
+    };
 
-  //   setSelectedChallenge(updatedChallenge);
-  //   updateTaskMutation.mutate({ id, completed: checked });
-  //   console.log("Task toggled", id, checked);
-  // };
+    setSelectedChallenge(updatedChallenge);
 
-  // const handleToggleSubchallenge = (id: Subtask["id"], checked: boolean) => {
-  //   if (!selectedChallenge) return;
-
-  //   const updatedChallenge = {
-  //     ...selectedChallenge,
-  //     sections: selectedChallenge.sections.map((section) => ({
-  //       ...section,
-  //       items: section.items.map((item) => ({
-  //         ...item,
-  //         subchallenges: item.subchallenges?.map((subtask) => {
-  //           if (subtask.id === id) {
-  //             return { ...subtask, completed: checked };
-  //           }
-  //           return subtask;
-  //         }),
-  //       })),
-  //     })),
-  //   };
-
-  //   setSelectedChallenge(updatedChallenge);
-  //   updateSubtaskMutation.mutate({ id, completed: checked });
-  //   // console.log("Subchallenge toggled", subtaskId, checked);
-  // };
+    // Then send mutation to backend
+    updateSubtaskMutation.mutate({ id, completed: checked });
+    console.log("Subchallenge toggled", id, checked);
+  };
 
   const renderSubchallenges = (subchallenges: Subtask[]) => (
     <ul className="list-disc space-y-2">
       {subchallenges.map((sub, idx) => (
         <li
           key={idx}
-          className={`flex items-start ${
-            sub.completed ? "text-green-400" : "text-gray-300"
-          }`}
+          className={`flex items-start ${sub.completed ? "text-green-400" : "text-gray-300"
+            }`}
         >
           {sub.completed ? (
             <span className="mr-2">&#10003;</span>
@@ -312,7 +302,7 @@ function Challenge() {
             <span className="mr-2">&#9679;</span>
           )}
           {sub.text}
-          {/* {[0, 1, 2].includes(user?.role ?? 3) && (
+          {[0, 1, 2].includes(user?.role ?? 3) && (
             <Switch
               className="ml-auto"
               checked={sub.completed}
@@ -320,7 +310,7 @@ function Challenge() {
                 handleToggleSubchallenge(sub.id, checked)
               }
             />
-          )} */}
+          )}
         </li>
       ))}
     </ul>
@@ -370,9 +360,8 @@ function Challenge() {
                     {section.items.map((item, idx) => (
                       <li
                         key={idx}
-                        className={`flex items-start ${
-                          item.completed ? "text-green-500" : "text-white"
-                        }`}
+                        className={`flex items-start ${item.completed ? "text-green-500" : "text-white"
+                          }`}
                       >
                         <div>
                           <div>
@@ -382,7 +371,7 @@ function Challenge() {
                               <span className="mr-2">&#9679;</span>
                             )}
                             {item.text}
-                            {/* {[0, 1, 2].includes(user?.role ?? 3) && (
+                            {[0, 1, 2].includes(user?.role ?? 3) && (
                               <Switch
                                 className="ml-auto"
                                 checked={item.completed}
@@ -390,7 +379,7 @@ function Challenge() {
                                   handleToggleTask(item.id, checked)
                                 }
                               />
-                            )} */}
+                            )}
                           </div>
                           {item.subchallenges &&
                             item.subchallenges.length > 0 && (

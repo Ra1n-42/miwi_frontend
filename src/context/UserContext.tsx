@@ -7,7 +7,7 @@ import React, {
   useMemo,
 } from "react";
 import { User } from "@/types/User";
-import { API_BASE_URL, IS_DEV } from "@/constants/api";
+import { API_BASE_URL, IS_DEV, IS_LOCAL } from "@/constants/api";
 
 interface UserContextType {
   user: User | null;
@@ -30,7 +30,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       try {
         console.log("Fetching user data...");
 
-        if (IS_DEV) {
+        if (IS_LOCAL && IS_DEV) {
           // Mock-Daten per fetch laden
           const mockResponse = await fetch("/data/mockUserData.json");
 
