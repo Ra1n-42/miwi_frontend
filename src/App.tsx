@@ -14,7 +14,7 @@ import Management from "./pages/Management";
 
 function App() {
   const { user } = useUser();
-
+  console.log("App", user);
   return (
     <Layout>
       <Routes>
