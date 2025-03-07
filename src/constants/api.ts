@@ -14,7 +14,6 @@ export const API_ENDPOINTS = {
 } as const;
 
 export const IS_LOCAL = false;
-// nimmt er das nicht für wahr?
 export const IS_DEV = true; 
 
 export const API_BASE_URL = IS_DEV
