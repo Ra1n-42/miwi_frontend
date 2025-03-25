@@ -13,7 +13,7 @@ export const API_ENDPOINTS = {
   },
 } as const;
 
-export const IS_LOCAL = false;
+export const IS_LOCAL = true;
 export const IS_DEV = true; 
 
 export const API_BASE_URL = IS_DEV
